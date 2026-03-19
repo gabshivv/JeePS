@@ -6,20 +6,31 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.jeeps.data.model.sampleTerminals
 import com.example.jeeps.ui.components.*
 import com.example.jeeps.ui.theme.PrimaryBlue
+import kotlinx.coroutines.launch
+
+private const val TAB_HOME     = 0
+private const val TAB_EXPLORE  = 1
+private const val TAB_MAP      = 2
+private const val TAB_SETTINGS = 3
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onFindRoutes: (origin: String, destination: String) -> Unit = { _, _ -> },
+    onSeeAllTerminals: () -> Unit = {},
 ) {
     var lang        by remember { mutableStateOf("EN") }
-    var selectedNav by remember { mutableIntStateOf(0) }
+    var selectedNav by remember { mutableIntStateOf(TAB_HOME) }
     var destination by remember { mutableStateOf("") }
+
+    val scope          = rememberCoroutineScope()
+    val focusRequester = remember { FocusRequester() }
 
     val scaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(
@@ -27,12 +38,34 @@ fun HomeScreen(
         )
     )
 
+    fun onNavSelected(index: Int) {
+        selectedNav = index
+        scope.launch {
+            when (index) {
+                TAB_HOME -> {
+                    scaffoldState.bottomSheetState.partialExpand()
+                }
+                TAB_EXPLORE -> {
+                    scaffoldState.bottomSheetState.expand()
+                    kotlinx.coroutines.delay(120)
+                    try { focusRequester.requestFocus() } catch (_: Exception) { }
+                }
+                TAB_MAP -> {
+                    scaffoldState.bottomSheetState.partialExpand()
+                }
+                TAB_SETTINGS -> {
+                    // TODO (P4): navigate to SettingsScreen
+                }
+            }
+        }
+    }
+
     Scaffold(
         bottomBar = {
             BottomNavBar(
                 lang           = lang,
                 selectedIndex  = selectedNav,
-                onItemSelected = { selectedNav = it },
+                onItemSelected = { onNavSelected(it) },
             )
         },
         contentWindowInsets = WindowInsets.navigationBars,
@@ -43,19 +76,20 @@ fun HomeScreen(
             sheetShape          = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
             sheetPeekHeight     = 200.dp,
             sheetDragHandle     = { BottomSheetDefaults.DragHandle() },
-            sheetContent = {
+            sheetContent        = {
                 Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
                     SearchBottomSheetContent(
                         lang                = lang,
                         destination         = destination,
                         onDestinationChange = { destination = it },
                         terminals           = sampleTerminals,
+                        focusRequester      = focusRequester,
                         onFindRoutes        = {
                             if (destination.isNotBlank()) {
                                 onFindRoutes("Crossing, Calamba", destination)
                             }
                         },
-                        onSeeAllTerminals   = { /* TODO */ },
+                        onSeeAllTerminals   = onSeeAllTerminals,
                     )
                 }
             },
@@ -69,7 +103,7 @@ fun HomeScreen(
             ) {
                 FlagStripe()
                 HeaderSection(lang = lang, onLangChange = { lang = it })
-                MapSection()
+                MapSection(modifier = Modifier.weight(1f))
             }
         }
     }

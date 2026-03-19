@@ -1,7 +1,6 @@
 package com.example.jeeps.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -17,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
@@ -34,6 +35,7 @@ fun SearchBottomSheetContent(
     terminals: List<Terminal>,
     onFindRoutes: () -> Unit = {},
     onSeeAllTerminals: () -> Unit = {},
+    focusRequester: FocusRequester = FocusRequester(),
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -46,9 +48,16 @@ fun SearchBottomSheetContent(
             lang                = lang,
             destination         = destination,
             onDestinationChange = onDestinationChange,
+            focusRequester      = focusRequester,
         )
         Spacer(Modifier.height(16.dp))
-        FindRoutesButton(lang = lang, onClick = onFindRoutes)
+
+        FindRoutesButton(
+            lang    = lang,
+            enabled = destination.isNotBlank(),
+            onClick = onFindRoutes,
+        )
+
         Spacer(Modifier.height(20.dp))
         TerminalsSectionHeader(lang = lang, onSeeAll = onSeeAllTerminals)
         Spacer(Modifier.height(8.dp))
@@ -68,6 +77,7 @@ private fun SearchInputCard(
     lang: String,
     destination: String,
     onDestinationChange: (String) -> Unit,
+    focusRequester: FocusRequester,
 ) {
     Surface(
         modifier       = Modifier.fillMaxWidth(),
@@ -76,7 +86,7 @@ private fun SearchInputCard(
         tonalElevation = 0.dp,
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // FROM — static (GPS detected)
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier          = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -107,7 +117,6 @@ private fun SearchInputCard(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = BorderLight)
 
-            // TO — editable text field
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier          = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -137,6 +146,9 @@ private fun SearchInputCard(
                             fontWeight = FontWeight.SemiBold,
                             color      = TextDark,
                         ),
+                        // focusRequester lets HomeScreen programmatically focus
+                        // this field when the Explore nav tab is tapped
+                        modifier      = Modifier.focusRequester(focusRequester),
                         decorationBox = { innerTextField ->
                             if (destination.isEmpty()) {
                                 Text(
@@ -155,13 +167,16 @@ private fun SearchInputCard(
 }
 
 @Composable
-private fun FindRoutesButton(lang: String, onClick: () -> Unit) {
+private fun FindRoutesButton(lang: String, enabled: Boolean, onClick: () -> Unit) {
     Button(
         onClick  = onClick,
+        enabled  = enabled,
         modifier = Modifier.fillMaxWidth().height(52.dp),
         colors   = ButtonDefaults.buttonColors(
-            containerColor = PrimaryRed,
-            contentColor   = Color.White,
+            containerColor         = PrimaryRed,
+            contentColor           = Color.White,
+            disabledContainerColor = PrimaryRed.copy(alpha = 0.38f),
+            disabledContentColor   = Color.White.copy(alpha = 0.6f),
         ),
         shape = RoundedCornerShape(12.dp),
     ) {
