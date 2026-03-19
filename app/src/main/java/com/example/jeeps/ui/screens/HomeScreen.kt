@@ -35,10 +35,12 @@ fun HomeScreen(
 
     val scope          = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }
+    var mapFullScreen by remember { mutableStateOf(false) }
 
     val scaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(
-            initialValue = SheetValue.Expanded
+            initialValue        = SheetValue.Expanded,
+            skipHiddenState     = false,
         )
     )
 
@@ -46,15 +48,32 @@ fun HomeScreen(
         selectedNav = index
         scope.launch {
             when (index) {
-                TAB_HOME -> scaffoldState.bottomSheetState.partialExpand()
+                TAB_HOME -> {
+                    mapFullScreen = false
+                    scaffoldState.bottomSheetState.partialExpand()
+                }
                 TAB_EXPLORE -> {
+                    mapFullScreen = false
                     scaffoldState.bottomSheetState.expand()
                     kotlinx.coroutines.delay(120)
                     try { focusRequester.requestFocus() } catch (_: Exception) { }
                 }
-                TAB_MAP      -> scaffoldState.bottomSheetState.partialExpand()
-                TAB_SETTINGS -> { /* TODO (P4): navigate to SettingsScreen */ }
+                TAB_MAP -> {
+                    mapFullScreen = true
+                    scaffoldState.bottomSheetState.hide()
+                }
+                TAB_SETTINGS -> {
+                    // TODO (P4): navigate to SettingsScreen
+                }
             }
+        }
+    }
+
+    // If user drags the sheet back up manually while on Map tab,
+    // reset the full-screen flag so the nav state stays in sync.
+    LaunchedEffect(scaffoldState.bottomSheetState.currentValue) {
+        if (scaffoldState.bottomSheetState.currentValue != SheetValue.Hidden) {
+            mapFullScreen = false
         }
     }
 
@@ -74,7 +93,7 @@ fun HomeScreen(
             sheetShape          = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
             sheetPeekHeight     = 200.dp,
             sheetDragHandle     = { BottomSheetDefaults.DragHandle() },
-            sheetContent = {
+            sheetContent        = {
                 Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
                     SearchBottomSheetContent(
                         lang                = lang,
@@ -97,10 +116,12 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(PrimaryBlue)
-                    .padding(bottomSheetPadding),
+                    .padding(if (mapFullScreen) PaddingValues(0.dp) else bottomSheetPadding),
             ) {
                 FlagStripe()
-                HeaderSection(lang = lang, onLangChange = { lang = it })
+                if (!mapFullScreen) {
+                    HeaderSection(lang = lang, onLangChange = { lang = it })
+                }
                 MapSection(modifier = Modifier.weight(1f))
             }
         }

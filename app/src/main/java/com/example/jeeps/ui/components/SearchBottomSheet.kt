@@ -6,9 +6,8 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -16,27 +15,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.focus.FocusRequester
 import com.example.jeeps.data.model.Terminal
 import com.example.jeeps.ui.theme.*
 
 @Composable
 fun SearchBottomSheetContent(
-    lang: String,
-    destination: String,
-    onDestinationChange: (String) -> Unit,
-    terminals: List<Terminal>,
-    onFindRoutes: () -> Unit = {},
-    onSeeAllTerminals: () -> Unit = {},
-    focusRequester: FocusRequester = FocusRequester(),
-    modifier: Modifier = Modifier,
+    lang                : String,
+    destination         : String,
+    onDestinationChange : (String) -> Unit,
+    terminals           : List<Terminal>,
+    onFindRoutes        : () -> Unit = {},
+    onSeeAllTerminals   : () -> Unit = {},
+    focusRequester      : FocusRequester = FocusRequester(),
+    modifier            : Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
@@ -51,13 +47,11 @@ fun SearchBottomSheetContent(
             focusRequester      = focusRequester,
         )
         Spacer(Modifier.height(16.dp))
-
         FindRoutesButton(
             lang    = lang,
             enabled = destination.isNotBlank(),
             onClick = onFindRoutes,
         )
-
         Spacer(Modifier.height(20.dp))
         TerminalsSectionHeader(lang = lang, onSeeAll = onSeeAllTerminals)
         Spacer(Modifier.height(8.dp))
@@ -74,10 +68,10 @@ fun SearchBottomSheetContent(
 
 @Composable
 private fun SearchInputCard(
-    lang: String,
-    destination: String,
-    onDestinationChange: (String) -> Unit,
-    focusRequester: FocusRequester,
+    lang                : String,
+    destination         : String,
+    onDestinationChange : (String) -> Unit,
+    focusRequester      : FocusRequester,
 ) {
     Surface(
         modifier       = Modifier.fillMaxWidth(),
@@ -87,6 +81,7 @@ private fun SearchInputCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
+            // FROM — static (GPS detected, will be dynamic when backend is ready)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier          = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -117,12 +112,16 @@ private fun SearchInputCard(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = BorderLight)
 
+            // TO — Google Places autocomplete
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
                 modifier          = Modifier.fillMaxWidth().padding(vertical = 4.dp),
             ) {
                 Box(
-                    modifier         = Modifier.size(26.dp).clip(CircleShape).background(Color(0xFFFFF0F0)),
+                    modifier         = Modifier
+                        .size(26.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFFF0F0)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(Icons.Default.LocationOn, null, tint = PrimaryRed, modifier = Modifier.size(14.dp))
@@ -136,29 +135,21 @@ private fun SearchInputCard(
                         color         = TextMuted,
                         letterSpacing = 0.6.sp,
                     )
-                    BasicTextField(
-                        value         = destination,
-                        onValueChange = onDestinationChange,
-                        singleLine    = true,
-                        cursorBrush   = SolidColor(PrimaryBlue),
-                        textStyle     = TextStyle(
-                            fontSize   = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color      = TextDark,
-                        ),
-                        // focusRequester lets HomeScreen programmatically focus
-                        // this field when the Explore nav tab is tapped
-                        modifier      = Modifier.focusRequester(focusRequester),
-                        decorationBox = { innerTextField ->
-                            if (destination.isEmpty()) {
-                                Text(
-                                    text     = if (lang == "EN") "Where are you going?" else "Saan ka pupunta?",
-                                    fontSize = 14.sp,
-                                    color    = TextHint,
-                                )
-                            }
-                            innerTextField()
-                        }
+                    Spacer(Modifier.height(2.dp))
+                    // PlacesSearchBar replaces BasicTextField —
+                    // shows autocomplete dropdown as user types,
+                    // restricted to PH for relevance
+                    PlacesSearchBar(
+                        value           = destination,
+                        onValueChange   = onDestinationChange,
+                        onPlaceSelected = { _, displayName ->
+                            // displayName goes to the field text
+                            // placeId is available here for backend route lookup later
+                            onDestinationChange(displayName)
+                        },
+                        focusRequester  = focusRequester,
+                        lang            = lang,
+                        modifier        = Modifier.fillMaxWidth(),
                     )
                 }
             }
@@ -206,7 +197,12 @@ private fun TerminalsSectionHeader(lang: String, onSeeAll: () -> Unit) {
         )
         TextButton(onClick = onSeeAll, contentPadding = PaddingValues(0.dp)) {
             Text(if (lang == "EN") "See All" else "Tingnan Lahat", fontSize = 11.sp, color = BlueLight)
-            Icon(Icons.Default.KeyboardArrowRight, null, tint = BlueLight, modifier = Modifier.size(16.dp))
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = BlueLight,
+                modifier = Modifier.size(16.dp)
+            )
         }
     }
 }
