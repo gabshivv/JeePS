@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,16 +21,20 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jeeps.data.model.Terminal
-import com.example.jeeps.data.model.sampleTerminals
 import com.example.jeeps.ui.components.FlagStripe
 import com.example.jeeps.ui.theme.*
 
 @Composable
 fun TerminalsScreen(
-    terminals: List<Terminal> = sampleTerminals,
-    onBack: () -> Unit = {},
+    onBack    : () -> Unit = {},
+    viewModel : TerminalsViewModel = viewModel(),
 ) {
+    val uiState   by viewModel.uiState.collectAsStateWithLifecycle()
+    val terminals : List<Terminal> = uiState.terminals
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -90,7 +95,7 @@ fun TerminalsScreen(
         }
 
         Row(
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+            modifier              = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment     = Alignment.CenterVertically,
         ) {
@@ -99,13 +104,16 @@ fun TerminalsScreen(
         }
 
         LazyColumn(
-            modifier       = Modifier
+            modifier            = Modifier
                 .weight(1f)
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(bottom = 24.dp),
+            contentPadding      = PaddingValues(bottom = 24.dp),
         ) {
-            items(terminals) { terminal ->
+            items(
+                items = terminals,
+                key   = { terminal -> terminal.id },
+            ) { terminal ->
                 TerminalRow(terminal = terminal)
             }
         }
@@ -115,7 +123,7 @@ fun TerminalsScreen(
 @Composable
 private fun TerminalRow(terminal: Terminal) {
     Row(
-        modifier = Modifier
+        modifier              = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
             .background(BgCard)

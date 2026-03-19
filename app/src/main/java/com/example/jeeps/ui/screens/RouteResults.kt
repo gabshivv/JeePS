@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -22,6 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jeeps.data.model.*
 import com.example.jeeps.ui.components.FlagStripe
 import com.example.jeeps.ui.components.RouteResultCard
@@ -29,21 +32,26 @@ import com.example.jeeps.ui.theme.*
 
 @Composable
 fun RouteResultsScreen(
-    origin: String = "Crossing",
-    destination: String = "Cabuyao Bayan",
-    routes: List<RouteSearchResult> = sampleRoutes,
-    onBack: () -> Unit = {},
-    onRouteSelected: (routeId: Int) -> Unit = {},
+    origin          : String = "Crossing",
+    destination     : String = "Cabuyao Bayan",
+    onBack          : () -> Unit = {},
+    onRouteSelected : (routeId: Int) -> Unit = {},
+    viewModel       : RouteResultsViewModel = viewModel(),
 ) {
-    var activeFilter by remember { mutableStateOf("All") }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    LaunchedEffect(origin, destination) {
+        viewModel.search(origin, destination)
+    }
+
+    var activeFilter by remember { mutableStateOf("All") }
     val filters = listOf("All", "Bayan", "Nat'l Hwy", "Lowest Fare")
 
     val displayedRoutes = when (activeFilter) {
-        "Bayan"       -> routes.filter { it.route.routeType == RouteType.BAYAN }
-        "Nat'l Hwy"   -> routes.filter { it.route.routeType == RouteType.NATIONAL_HIGHWAY }
-        "Lowest Fare" -> routes.sortedBy { it.fare.regularFare }
-        else          -> routes
+        "Bayan"       -> uiState.routes.filter { it.route.routeType == RouteType.BAYAN }
+        "Nat'l Hwy"   -> uiState.routes.filter { it.route.routeType == RouteType.NATIONAL_HIGHWAY }
+        "Lowest Fare" -> uiState.routes.sortedBy { it.fare.regularFare }
+        else          -> uiState.routes
     }
 
     Column(
@@ -52,11 +60,8 @@ fun RouteResultsScreen(
             .background(BgApp),
     ) {
         FlagStripe()
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(PrimaryBlue),
-        ) {
+
+        Box(modifier = Modifier.fillMaxWidth().background(PrimaryBlue)) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -75,49 +80,26 @@ fun RouteResultsScreen(
                         modifier           = Modifier.size(16.dp),
                     )
                     Spacer(Modifier.width(4.dp))
-                    Text(
-                        text     = "Back",
-                        fontSize = 11.sp,
-                        color    = Color.White.copy(alpha = 0.65f),
-                    )
+                    Text("Back", fontSize = 11.sp, color = Color.White.copy(alpha = 0.65f))
                 }
-
-                // From - To
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text       = origin,
-                        fontSize   = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color      = Color.White,
-                    )
+                    Text(origin,      fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Spacer(Modifier.width(8.dp))
-                    Icon(
-                        imageVector        = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint               = Color.White.copy(alpha = 0.5f),
-                        modifier           = Modifier.size(14.dp),
-                    )
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(
-                        text       = destination,
-                        fontSize   = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color      = AccentYellow,
-                    )
+                    Text(destination, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = AccentYellow)
                 }
-
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text     = "${displayedRoutes.size} route${if (displayedRoutes.size != 1) "s" else ""} found · Laguna",
+                    text     = if (uiState.isLoading) "Searching…"
+                    else "${displayedRoutes.size} route${if (displayedRoutes.size != 1) "s" else ""} found · Laguna",
                     fontSize = 11.sp,
                     color    = Color.White.copy(alpha = 0.55f),
                 )
             }
-
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(20.dp)
+                    .fillMaxWidth().height(20.dp)
                     .align(Alignment.BottomCenter)
                     .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                     .background(BgApp),
@@ -136,49 +118,48 @@ fun RouteResultsScreen(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
                         .background(if (isActive) PrimaryBlue else BgCard)
-                        .border(
-                            width = 1.5.dp,
-                            color = if (isActive) PrimaryBlue else BorderLight,
-                            shape = RoundedCornerShape(20.dp),
-                        )
+                        .border(1.5.dp, if (isActive) PrimaryBlue else BorderLight, RoundedCornerShape(20.dp))
                         .clickable { activeFilter = label }
                         .padding(horizontal = 14.dp, vertical = 6.dp),
                 ) {
-                    Text(
-                        text       = label,
-                        fontSize   = 11.sp,
-                        fontWeight = FontWeight.Medium,
-                        color      = if (isActive) Color.White else TextSubtle,
-                    )
+                    Text(label, fontSize = 11.sp, fontWeight = FontWeight.Medium,
+                        color = if (isActive) Color.White else TextSubtle)
                 }
             }
         }
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            if (displayedRoutes.isEmpty()) {
-                Box(
-                    modifier         = Modifier.fillMaxWidth().padding(top = 40.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text     = "No routes match this filter.",
-                        fontSize = 13.sp,
-                        color    = TextMuted,
-                    )
+        when {
+            uiState.isLoading -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = PrimaryBlue)
                 }
-            } else {
-                displayedRoutes.forEach { result ->
-                    RouteResultCard(
-                        result        = result,
-                        onViewDetails = { onRouteSelected(result.route.id) },
-                    )
+            }
+            uiState.error != null -> {
+                Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Text("Couldn't load routes.\n${uiState.error}", fontSize = 13.sp, color = TextMuted)
+                }
+            }
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp)
+                        .padding(bottom = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (displayedRoutes.isEmpty()) {
+                        Box(Modifier.fillMaxWidth().padding(top = 40.dp), contentAlignment = Alignment.Center) {
+                            Text("No routes match this filter.", fontSize = 13.sp, color = TextMuted)
+                        }
+                    } else {
+                        displayedRoutes.forEach { result ->
+                            RouteResultCard(
+                                result        = result,
+                                onViewDetails = { onRouteSelected(result.route.id) },
+                            )
+                        }
+                    }
                 }
             }
         }

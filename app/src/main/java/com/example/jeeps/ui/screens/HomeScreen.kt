@@ -9,7 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.jeeps.data.model.sampleTerminals
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jeeps.ui.components.*
 import com.example.jeeps.ui.theme.PrimaryBlue
 import kotlinx.coroutines.launch
@@ -22,9 +23,12 @@ private const val TAB_SETTINGS = 3
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onFindRoutes: (origin: String, destination: String) -> Unit = { _, _ -> },
-    onSeeAllTerminals: () -> Unit = {},
+    onFindRoutes      : (origin: String, destination: String) -> Unit = { _, _ -> },
+    onSeeAllTerminals : () -> Unit = {},
+    viewModel         : HomeViewModel = viewModel(),
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     var lang        by remember { mutableStateOf("EN") }
     var selectedNav by remember { mutableIntStateOf(TAB_HOME) }
     var destination by remember { mutableStateOf("") }
@@ -42,20 +46,14 @@ fun HomeScreen(
         selectedNav = index
         scope.launch {
             when (index) {
-                TAB_HOME -> {
-                    scaffoldState.bottomSheetState.partialExpand()
-                }
+                TAB_HOME -> scaffoldState.bottomSheetState.partialExpand()
                 TAB_EXPLORE -> {
                     scaffoldState.bottomSheetState.expand()
                     kotlinx.coroutines.delay(120)
                     try { focusRequester.requestFocus() } catch (_: Exception) { }
                 }
-                TAB_MAP -> {
-                    scaffoldState.bottomSheetState.partialExpand()
-                }
-                TAB_SETTINGS -> {
-                    // TODO (P4): navigate to SettingsScreen
-                }
+                TAB_MAP      -> scaffoldState.bottomSheetState.partialExpand()
+                TAB_SETTINGS -> { /* TODO (P4): navigate to SettingsScreen */ }
             }
         }
     }
@@ -76,17 +74,17 @@ fun HomeScreen(
             sheetShape          = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
             sheetPeekHeight     = 200.dp,
             sheetDragHandle     = { BottomSheetDefaults.DragHandle() },
-            sheetContent        = {
+            sheetContent = {
                 Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
                     SearchBottomSheetContent(
                         lang                = lang,
                         destination         = destination,
                         onDestinationChange = { destination = it },
-                        terminals           = sampleTerminals,
+                        terminals           = uiState.terminals,
                         focusRequester      = focusRequester,
                         onFindRoutes        = {
                             if (destination.isNotBlank()) {
-                                onFindRoutes("Crossing, Calamba", destination)
+                                onFindRoutes(uiState.detectedOrigin, destination)
                             }
                         },
                         onSeeAllTerminals   = onSeeAllTerminals,
