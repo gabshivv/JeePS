@@ -14,38 +14,43 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jeeps.data.model.Landmark
-import com.example.jeeps.data.model.RouteStop
+import com.example.jeeps.data.model.RouteSegment
 import com.example.jeeps.ui.theme.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Icon
 
 @Composable
 fun StopTimeline(
-    stops: List<RouteStop>,
-    landmarks: List<Landmark>,
-    origin: String,
-    destination: String,
-    modifier: Modifier = Modifier,
+    stops       : List<RouteSegment>,   // updated: RouteStop → RouteSegment
+    landmarks   : List<Landmark>,
+    origin      : String,
+    destination : String,
+    modifier    : Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         stops.forEachIndexed { index, stop ->
-            val isOrigin  = index == 0
-            val isDest    = index == stops.lastIndex
-            val stopLandmarks = landmarks.filter { it.routeStopId == stop.id }
+            val isOrigin = index == 0
+            val isDest   = index == stops.lastIndex
+
+            // Match landmarks to this stop via barangayId (ERD-aligned)
+            val stopLandmarks = landmarks.filter { it.barangayId == stop.barangayId }
 
             StopRow(
-                name       = when {
+                name      = when {
                     isOrigin -> origin
                     isDest   -> destination
                     else     -> stop.barangayName
                 },
-                subLabel   = when {
+                subLabel  = when {
                     isOrigin -> "Origin · 0 km"
                     isDest   -> "${"%.1f".format(stop.distanceFromOriginKm)} km · Destination"
                     else     -> "${stop.barangayName} · ${"%.1f".format(stop.distanceFromOriginKm)} km"
                 },
-                isOrigin   = isOrigin,
-                isDest     = isDest,
-                isLast     = isDest,
-                landmarks  = stopLandmarks,
+                isOrigin  = isOrigin,
+                isDest    = isDest,
+                isLast    = isDest,
+                landmarks = stopLandmarks,
             )
         }
     }
@@ -53,23 +58,22 @@ fun StopTimeline(
 
 @Composable
 private fun StopRow(
-    name: String,
-    subLabel: String,
-    isOrigin: Boolean,
-    isDest: Boolean,
-    isLast: Boolean,
-    landmarks: List<Landmark>,
+    name      : String,
+    subLabel  : String,
+    isOrigin  : Boolean,
+    isDest    : Boolean,
+    isLast    : Boolean,
+    landmarks : List<Landmark>,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier              = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        // Spine column
+        // ── Spine: dot + connector line ──────────────────────────────────────
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier            = Modifier.padding(top = 3.dp),
         ) {
-            // Dot
             Box(
                 modifier = Modifier
                     .size(12.dp)
@@ -91,7 +95,6 @@ private fun StopRow(
                         shape = CircleShape,
                     )
             )
-            // Connector line
             if (!isLast) {
                 Box(
                     modifier = Modifier
@@ -102,7 +105,7 @@ private fun StopRow(
             }
         }
 
-        // Content
+        // ── Stop content ──────────────────────────────────────────────────────
         Column(modifier = Modifier.padding(bottom = 16.dp)) {
             Text(
                 text       = name,
@@ -130,16 +133,21 @@ fun LandmarkTag(name: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .background(BlueTint, RoundedCornerShape(7.dp))
-            .padding(horizontal = 8.dp, vertical = 3.dp),
-        verticalAlignment     = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
+            .padding(horizontal = 6.dp, vertical = 3.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        Text("📍", fontSize = 9.sp)
+        Icon(
+            imageVector = Icons.Default.LocationOn,
+            contentDescription = null,
+            tint = BlueLight,
+            modifier = Modifier.size(10.dp)
+        )
         Text(
-            text       = name,
-            fontSize   = 9.5.sp,
+            text = name,
+            fontSize = 9.5.sp,
             fontWeight = FontWeight.SemiBold,
-            color      = BlueLight,
+            color = BlueLight,
         )
     }
 }
