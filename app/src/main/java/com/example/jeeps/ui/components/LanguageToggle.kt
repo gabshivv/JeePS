@@ -29,7 +29,7 @@ fun LanguageToggle(
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment     = Alignment.CenterVertically,
     ) {
-        listOf("EN", "TL").forEach { l ->
+        listOf("EN", "FIL   ").forEach { l ->
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))

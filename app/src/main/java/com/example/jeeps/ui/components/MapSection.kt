@@ -72,22 +72,5 @@ fun MapSection(modifier: Modifier = Modifier) {
                 )
             }
         }
-
-        // Placeholder label — disappears once API key is added
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 12.dp, bottom = 10.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.Black.copy(alpha = 0.45f))
-                .padding(horizontal = 10.dp, vertical = 4.dp)
-        ) {
-            Text(
-                text       = "Map loading — API key pending",
-                fontSize   = 10.sp,
-                color      = Color.White,
-                fontWeight = FontWeight.Medium,
-            )
-        }
     }
 }
