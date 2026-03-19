@@ -26,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jeeps.data.model.Terminal
 import com.example.jeeps.ui.components.FlagStripe
 import com.example.jeeps.ui.theme.*
+import com.example.jeeps.ui.viewmodels.TerminalsViewModel
 
 @Composable
 fun TerminalsScreen(

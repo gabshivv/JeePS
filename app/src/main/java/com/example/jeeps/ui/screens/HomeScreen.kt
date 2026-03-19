@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.jeeps.ui.viewmodels.HomeViewModel
 import com.example.jeeps.ui.components.*
 import com.example.jeeps.ui.theme.PrimaryBlue
 import kotlinx.coroutines.launch

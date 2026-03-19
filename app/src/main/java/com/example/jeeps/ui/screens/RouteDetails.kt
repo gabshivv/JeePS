@@ -26,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.jeeps.data.model.*
 import com.example.jeeps.ui.components.*
 import com.example.jeeps.ui.theme.*
+import com.example.jeeps.ui.viewmodels.RouteDetailViewModel
 
 @Composable
 fun RouteDetailScreen(

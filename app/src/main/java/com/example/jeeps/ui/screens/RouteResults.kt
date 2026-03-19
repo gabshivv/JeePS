@@ -29,6 +29,7 @@ import com.example.jeeps.data.model.*
 import com.example.jeeps.ui.components.FlagStripe
 import com.example.jeeps.ui.components.RouteResultCard
 import com.example.jeeps.ui.theme.*
+import com.example.jeeps.ui.viewmodels.RouteResultsViewModel
 
 @Composable
 fun RouteResultsScreen(

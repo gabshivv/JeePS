@@ -1,4 +1,4 @@
-package com.example.jeeps.ui.screens
+package com.example.jeeps.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
