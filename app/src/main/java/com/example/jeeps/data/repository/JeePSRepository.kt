@@ -6,114 +6,44 @@ import com.example.jeeps.data.model.*
 // JeePSRepository
 //
 // CONTRACT between frontend and backend.
-//
-// Frontend calls these functions — backend implements them.
-// The frontend never touches raw SQL, API URLs, or auth headers.
-//
-// Backend dev: implement JeePSRepositoryImpl and swap the stub below.
-// All functions are suspend — backend can use Retrofit, Ktor, or Room freely.
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface JeePSRepository {
 
-    // ── Routes ────────────────────────────────────────────────────────────────
-
-    /**
-     * Returns all routes that connect [originBarangayId] to [destinationBarangayId].
-     * Backend should sort by best match first (shortest fare or fewest transfers).
-     * Each result includes the computed [FareResult] for the given origin→destination pair.
-     */
     suspend fun searchRoutes(
         originBarangayId     : Int,
         destinationBarangayId: Int,
     ): List<RouteSearchResult>
 
-    /**
-     * Returns the full detail for a single route by [routeId].
-     * Backend should join: route_segment → barangay, waymark → signage,
-     * terminal_assignment → terminal, landmark → barangay.
-     */
     suspend fun getRouteById(routeId: Int): Route?
 
-    /**
-     * Returns all active routes (for a future Explore/browse screen).
-     */
     suspend fun getAllRoutes(): List<Route>
 
-    // ── Terminals ─────────────────────────────────────────────────────────────
-
-    /**
-     * Returns all terminals, optionally filtered by [cityId].
-     * Backend should enrich each terminal with live unit count if available.
-     */
     suspend fun getTerminals(cityId: Int? = null): List<Terminal>
 
-    /**
-     * Returns a single terminal by [terminalId].
-     */
     suspend fun getTerminalById(terminalId: Int): Terminal?
 
-    // ── Geography ─────────────────────────────────────────────────────────────
-
-    /**
-     * Returns all provinces.
-     */
     suspend fun getProvinces(): List<Province>
 
-    /**
-     * Returns all cities, optionally filtered by [provinceId].
-     */
     suspend fun getCities(provinceId: Int? = null): List<City>
 
-    /**
-     * Returns all barangays, optionally filtered by [cityId].
-     * Used to populate the destination autocomplete on the search field.
-     */
     suspend fun getBarangays(cityId: Int? = null): List<Barangay>
 
-    /**
-     * Searches barangays and landmarks by name [query].
-     * Used for the TO field autocomplete — returns matching place names
-     * the user can tap to select as their destination.
-     */
     suspend fun searchDestinations(query: String): List<DestinationResult>
 
-    // ── Landmarks & Signage ───────────────────────────────────────────────────
-
-    /**
-     * Returns all landmarks for a given [barangayId].
-     */
     suspend fun getLandmarksByBarangay(barangayId: Int): List<Landmark>
 
-    /**
-     * Returns all signage (jeepney signs) for a given [routeId].
-     * Resolved via waymark junction table.
-     */
     suspend fun getSignageForRoute(routeId: Int): List<Signage>
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DestinationResult — returned by searchDestinations()
-//
-// A unified search result that can be either a Barangay or a Landmark.
-// The frontend uses this to show autocomplete suggestions in the TO field.
-// ─────────────────────────────────────────────────────────────────────────────
-
 data class DestinationResult(
     val id          : Int,
-    val displayName : String,   // e.g. "Pulo Market, Brgy. Pulo, Cabuyao"
+    val displayName : String,
     val type        : DestinationType,
-    val barangayId  : Int,      // the barangay_id the route search needs
+    val barangayId  : Int,
 )
 
 enum class DestinationType { BARANGAY, LANDMARK }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// SampleJeePSRepository — stub that returns hardcoded sample data.
-//
-// Used right now so the app compiles and runs without a backend.
-// Backend dev: delete this class and replace the DI binding with your Impl.
-// ─────────────────────────────────────────────────────────────────────────────
 
 class SampleJeePSRepository : JeePSRepository {
 
@@ -173,3 +103,60 @@ class SampleJeePSRepository : JeePSRepository {
             ?.map { Signage(it.signageId, it.signageName) }
             ?: emptyList()
 }
+
+// ── Sample Data ──────────────────────────────────────────────────────────────
+
+val sampleProvince = Province(1, "Laguna")
+
+val sampleCities = listOf(
+    City(1, "Cabuyao", 1),
+    City(2, "Santa Rosa", 1),
+    City(3, "Calamba", 1)
+)
+
+val sampleBarangays = listOf(
+    Barangay(1, "Pulo", 1),
+    Barangay(2, "Banay-Banay", 1),
+    Barangay(3, "Niugan", 1),
+    Barangay(4, "Sala", 1),
+    Barangay(5, "Bigaa", 1)
+)
+
+val sampleTerminals = listOf(
+    Terminal(
+        id = 1,
+        name = "Cabuyao Central Terminal",
+        cityId = 1,
+        unitCount = 12,
+        isLow = false,
+        routes = listOf("Cabuyao - Crossing", "Cabuyao - Sta. Rosa")
+    )
+)
+
+val sampleRoutes = listOf(
+    RouteSearchResult(
+        route = Route(
+            id = 1,
+            displayName = "Cabuyao - Crossing via Pulo",
+            routeCode = "CAB-CRS-01",
+            origin = "Cabuyao Bayan",
+            destination = "Crossing",
+            routeType = RouteType.NATIONAL_HIGHWAY,
+            stops = listOf(
+                RouteSegment(1, 1, "Pulo", 0.0),
+                RouteSegment(1, 2, "Banay-Banay", 2.5),
+                RouteSegment(1, 3, "Niugan", 5.0)
+            ),
+            landmarks = listOf(
+                Landmark(1, "Pulo Market", 1, "Pulo")
+            )
+        ),
+        fare = FareResult(
+            regularFare = 15.0,
+            discountedFare = 12.0,
+            distanceKm = 5.0,
+            stopCount = 3
+        ),
+        isBestMatch = true
+    )
+)
