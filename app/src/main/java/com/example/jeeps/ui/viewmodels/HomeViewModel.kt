@@ -1,14 +1,17 @@
 package com.example.jeeps.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.jeeps.data.model.Terminal
 import com.example.jeeps.data.repository.JeePSRepository
-import com.example.jeeps.data.repository.SampleJeePSRepository
+import com.example.jeeps.data.repository.SupabaseJeePSRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
+private const val TAG = "HomeViewModel"
 
 data class HomeUiState(
     val terminals      : List<Terminal> = emptyList(),
@@ -18,9 +21,7 @@ data class HomeUiState(
 )
 
 class HomeViewModel(
-    // Backend dev: swap SampleJeePSRepository with the real implementation
-    // via dependency injection (Hilt/Koin). Don't change this screen.
-    private val repository: JeePSRepository = SampleJeePSRepository()
+    private val repository: JeePSRepository = SupabaseJeePSRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -31,20 +32,21 @@ class HomeViewModel(
     }
 
     private fun loadTerminals() {
+        Log.d(TAG, "Loading terminals...")
         viewModelScope.launch {
             try {
                 val terminals = repository.getTerminals()
+                Log.d(TAG, "Successfully loaded ${terminals.size} terminals")
                 _uiState.value = HomeUiState(
                     terminals      = terminals,
-                    // TODO: replace with real GPS-resolved address from LocationManager
-                    // For now, hardcoded origin lives here (ViewModel) not in the screen.
                     detectedOrigin = "Crossing, Calamba",
                     isLoading      = false,
                 )
             } catch (e: Exception) {
+                Log.e(TAG, "Failed to load terminals", e)
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error     = e.message,
+                    error     = "Failed to load data: ${e.message}",
                 )
             }
         }

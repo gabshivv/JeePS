@@ -64,7 +64,7 @@ fun RouteDetailScreen(
     }
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Stops", "Landmarks", "Info")
+    val tabs = listOf("Stops", "Landmarks", "Map", "Info")
 
     Column(
         modifier = Modifier
@@ -105,8 +105,8 @@ fun RouteDetailScreen(
         Box(modifier = Modifier.padding(horizontal = 20.dp).offset(y = (-6).dp)) {
             SignboardCard(
                 routeCode   = route.routeCode,
-                origin      = route.origin,
-                destination = route.destination,
+                origin      = route.originName,
+                destination = route.destinationName,
                 viaText     = route.stops.drop(1).dropLast(1).joinToString(" · ") { it.barangayName },
                 routeType   = route.routeType,
                 size        = SignboardSize.FULL,
@@ -160,8 +160,19 @@ fun RouteDetailScreen(
         when (selectedTab) {
             0 -> StopsTabContent(route = route, bg = bg)
             1 -> LandmarksTabContent(route = route, bg = bg, surface = surface, outline = outline, onSurf = onSurf)
-            2 -> InfoTabContent(route = route, fare = fare, bg = bg, surface = surface, outline = outline, onSurf = onSurf)
+            2 -> MapTabContent(route = route)
+            3 -> InfoTabContent(route = route, fare = fare, bg = bg, surface = surface, outline = outline, onSurf = onSurf)
         }
+    }
+}
+
+@Composable
+private fun MapTabContent(route: Route) {
+    Box(modifier = Modifier.fillMaxSize().padding(20.dp)) {
+        MapSection(
+            activeRoute = route,
+            modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(24.dp))
+        )
     }
 }
 
@@ -201,8 +212,8 @@ private fun StopsTabContent(route: Route, bg: Color) {
         StopTimeline(
             stops       = route.stops,
             landmarks   = route.landmarks,
-            origin      = route.origin,
-            destination = route.destination,
+            origin      = route.originName,
+            destination = route.destinationName,
         )
     }
 }
@@ -284,7 +295,7 @@ private fun InfoTabContent(
             InfoRow("Type",      if (route.routeType == RouteType.BAYAN) "Bayan (Barangay roads)" else "National Highway", onSurf = onSurf)
             InfoRow("Distance",  "${"%.1f".format(fare.distanceKm)} km",         onSurf = onSurf)
             InfoRow("Stops",     "${fare.stopCount}",                            onSurf = onSurf)
-            InfoRow("Direction", "${route.origin} → ${route.destination}",       onSurf = onSurf)
+            InfoRow("Direction", "${route.originName} → ${route.destinationName}",       onSurf = onSurf)
             InfoRow("Status",    route.status.name.lowercase().replaceFirstChar { it.uppercase() }, onSurf = onSurf)
         }
     }

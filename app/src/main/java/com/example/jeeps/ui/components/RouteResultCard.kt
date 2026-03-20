@@ -17,7 +17,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jeeps.data.model.*
-import com.example.jeeps.data.repository.sampleRoutes
 import com.example.jeeps.ui.theme.*
 
 @Composable
@@ -60,8 +59,8 @@ fun RouteResultCard(
         Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             SignboardCard(
                 routeCode   = route.routeCode,
-                origin      = route.origin,
-                destination = route.destination,
+                origin      = route.originName, // Updated
+                destination = route.destinationName, // Updated
                 viaText     = route.stops
                     .drop(1)
                     .dropLast(1)
@@ -200,15 +199,4 @@ private fun StatCell(
             letterSpacing = 0.4.sp,
         )
     }
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFFF4F6FA)
-@Composable
-private fun RouteResultCardPreview() {
-    val sample = sampleRoutes.first()
-    RouteResultCard(
-        result        = sample,
-        onViewDetails = {},
-        modifier      = Modifier.padding(16.dp),
-    )
 }
