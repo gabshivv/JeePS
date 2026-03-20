@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.jeeps.data.model.Terminal
 import com.example.jeeps.data.repository.JeePSRepository
-import com.example.jeeps.data.repository.SampleJeePSRepository
+import com.example.jeeps.data.repository.SupabaseJeePSRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +17,7 @@ data class TerminalsUiState(
 )
 
 class TerminalsViewModel(
-    private val repository: JeePSRepository = SampleJeePSRepository()
+    private val repository: JeePSRepository = SupabaseJeePSRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TerminalsUiState())

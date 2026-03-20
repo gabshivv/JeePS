@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.jeeps.data.model.FareResult
 import com.example.jeeps.data.model.Route
 import com.example.jeeps.data.repository.JeePSRepository
-import com.example.jeeps.data.repository.SampleJeePSRepository
+import com.example.jeeps.data.repository.SupabaseJeePSRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +19,7 @@ data class RouteDetailUiState(
 )
 
 class RouteDetailViewModel(
-    private val repository: JeePSRepository = SampleJeePSRepository()
+    private val repository: JeePSRepository = SupabaseJeePSRepository()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RouteDetailUiState())
@@ -30,10 +30,6 @@ class RouteDetailViewModel(
             _uiState.value = RouteDetailUiState(isLoading = true)
             try {
                 val route = repository.getRouteById(routeId)
-                // Fare is pre-computed by the repository (from RouteSearchResult).
-                // Fetched separately here since detail screen can also be reached
-                // directly (e.g. deep link). Backend dev: add a getFareForRoute()
-                // call when the API supports it.
                 val fare = repository.searchRoutes(0, 0)
                     .find { it.route.id == routeId }
                     ?.fare

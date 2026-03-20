@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jeeps.data.model.Landmark
 import com.example.jeeps.data.model.RouteSegment
+import com.example.jeeps.data.model.barangayName
 import com.example.jeeps.ui.theme.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -22,7 +23,7 @@ import androidx.compose.material3.Icon
 
 @Composable
 fun StopTimeline(
-    stops       : List<RouteSegment>,   // updated: RouteStop → RouteSegment
+    stops       : List<RouteSegment>,
     landmarks   : List<Landmark>,
     origin      : String,
     destination : String,
@@ -33,7 +34,6 @@ fun StopTimeline(
             val isOrigin = index == 0
             val isDest   = index == stops.lastIndex
 
-            // Match landmarks to this stop via barangayId (ERD-aligned)
             val stopLandmarks = landmarks.filter { it.barangayId == stop.barangayId }
 
             StopRow(
@@ -69,7 +69,6 @@ private fun StopRow(
         modifier              = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        // ── Spine: dot + connector line ──────────────────────────────────────
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier            = Modifier.padding(top = 3.dp),
@@ -105,7 +104,6 @@ private fun StopRow(
             }
         }
 
-        // ── Stop content ──────────────────────────────────────────────────────
         Column(modifier = Modifier.padding(bottom = 16.dp)) {
             Text(
                 text       = name,

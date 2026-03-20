@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,88 +32,76 @@ fun SignboardCard(
 ) {
     val isMini       = size == SignboardSize.MINI
     val cornerRadius = if (isMini) 8.dp  else 10.dp
-    val topStripeH   = if (isMini) 5.dp  else 7.dp
-    val botStripeH   = if (isMini) 4.dp  else 5.dp
-    val bodyPadH     = if (isMini) 8.dp  else 10.dp
-    val bodyPadV     = if (isMini) 6.dp  else 9.dp
-    val codeSize     = if (isMini) 9.sp  else 10.sp
-    val mainSize     = if (isMini) 14.sp else 17.sp
-    val viaSize      = if (isMini) 8.5.sp else 9.sp
+    val topStripeH   = if (isMini) 4.dp  else 7.dp
+    val botStripeH   = if (isMini) 3.dp  else 5.dp
+    val bodyPadH     = if (isMini) 10.dp else 12.dp
+    val bodyPadV     = if (isMini) 6.dp  else 10.dp
+    val codeSize     = if (isMini) 8.sp  else 10.sp
+    val mainSize     = if (isMini) 13.sp else 16.sp
+    val viaSize      = if (isMini) 8.sp  else 9.sp
 
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(cornerRadius))
             .border(
-                width = if (isMini) 2.dp else 2.5.dp,
+                width = if (isMini) 1.5.dp else 2.dp,
                 color = Color(0xFF333333),
                 shape = RoundedCornerShape(cornerRadius),
             )
             .background(SignboardBg),
     ) {
-        // Top stripe — red / yellow alternating
         SignboardStripe(height = topStripeH, startsRed = true)
 
         Column(
             modifier = Modifier.padding(horizontal = bodyPadH, vertical = bodyPadV)
         ) {
-            // Route code line
             Text(
-                text          = "$routeCode · Laguna",
+                text          = "$routeCode · Laguna".uppercase(),
                 fontSize      = codeSize,
                 fontWeight    = FontWeight.Bold,
-                color         = AccentYellow.copy(alpha = 0.65f),
-                letterSpacing = 1.2.sp,
+                color         = AccentYellow.copy(alpha = 0.7f),
+                letterSpacing = 1.sp,
             )
-            Spacer(Modifier.height(3.dp))
+            Spacer(Modifier.height(2.dp))
 
-            // Origin → Destination
             Row(
                 verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Text(
-                    text       = origin.uppercase(),
-                    fontSize   = mainSize,
-                    fontWeight = FontWeight.Bold,
-                    color      = Color.White,
+                    text     = origin.uppercase(),
+                    fontSize = mainSize,
+                    fontWeight = FontWeight.ExtraBold,
+                    color    = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
                 SignboardArrow()
                 Text(
-                    text       = destination.uppercase(),
-                    fontSize   = mainSize,
-                    fontWeight = FontWeight.Bold,
-                    color      = AccentYellow,
+                    text     = destination.uppercase(),
+                    fontSize = mainSize,
+                    fontWeight = FontWeight.ExtraBold,
+                    color    = AccentYellow,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
             }
 
-            // Via text
-            Text(
-                text      = "via $viaText",
-                fontSize  = viaSize,
-                color     = Color.White.copy(alpha = 0.4f),
-                modifier  = Modifier.padding(top = 3.dp),
-            )
-
-            // Route type badge — only on FULL size
-            if (!isMini) {
-                Spacer(Modifier.height(7.dp))
-                Row(
-                    modifier              = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment     = Alignment.CenterVertically,
-                ) {
-                    SignboardTypeBadge(routeType)
-                    Text(
-                        text     = "Look for this sign on the jeepney",
-                        fontSize = 9.sp,
-                        color    = Color.White.copy(alpha = 0.35f),
-                    )
-                }
+            if (viaText.isNotBlank()) {
+                Text(
+                    text     = "via $viaText",
+                    fontSize = viaSize,
+                    color    = Color.White.copy(alpha = 0.5f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
             }
         }
 
-        // Bottom stripe — yellow / red alternating
         SignboardStripe(height = botStripeH, startsRed = false)
     }
 }
@@ -120,46 +109,20 @@ fun SignboardCard(
 @Composable
 private fun SignboardArrow() {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.width(20.dp).height(2.dp).background(AccentYellow))
-        Text("▶", fontSize = 7.sp, color = AccentYellow)
+        Box(Modifier.width(12.dp).height(1.5.dp).background(AccentYellow))
+        Text("▶", fontSize = 6.sp, color = AccentYellow)
     }
 }
 
 @Composable
 private fun SignboardStripe(height: Dp, startsRed: Boolean) {
     val colors = if (startsRed)
-        listOf(PrimaryRed, AccentYellow, PrimaryRed, AccentYellow,
-            PrimaryRed, AccentYellow, PrimaryRed, AccentYellow,
-            PrimaryRed, AccentYellow, PrimaryRed, AccentYellow)
+        listOf(PrimaryRed, AccentYellow, PrimaryRed, AccentYellow, PrimaryRed, AccentYellow)
     else
-        listOf(AccentYellow, PrimaryRed, AccentYellow, PrimaryRed,
-            AccentYellow, PrimaryRed, AccentYellow, PrimaryRed,
-            AccentYellow, PrimaryRed, AccentYellow, PrimaryRed)
+        listOf(AccentYellow, PrimaryRed, AccentYellow, PrimaryRed, AccentYellow, PrimaryRed)
     Row(modifier = Modifier.fillMaxWidth().height(height)) {
         colors.forEach { color ->
             Box(Modifier.weight(1f).fillMaxHeight().background(color))
         }
-    }
-}
-
-@Composable
-private fun SignboardTypeBadge(routeType: RouteType) {
-    val (label, bg) = when (routeType) {
-        RouteType.BAYAN            -> "BAYAN ROUTE" to PrimaryRed
-        RouteType.NATIONAL_HIGHWAY -> "NAT'L HWY"   to Color(0xFF22C55E)
-    }
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(4.dp))
-            .background(bg)
-            .padding(horizontal = 8.dp, vertical = 3.dp),
-    ) {
-        Text(
-            text       = label,
-            fontSize   = 9.5.sp,
-            fontWeight = FontWeight.Bold,
-            color      = Color.White,
-            letterSpacing = 0.8.sp,
-        )
     }
 }
