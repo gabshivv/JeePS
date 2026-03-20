@@ -33,7 +33,7 @@ private val JeePSLightColorScheme = lightColorScheme(
     outlineVariant   = BorderMedium,
 )
 
-// Dark mode
+// Dark mode — softer whites to reduce eye strain
 private val JeePSDarkColorScheme = darkColorScheme(
     primary          = Color(0xFF5B8DEF),
     onPrimary        = Color(0xFF00235A),
@@ -50,10 +50,11 @@ private val JeePSDarkColorScheme = darkColorScheme(
     onError          = Color(0xFF5A0010),
 
     background       = Color(0xFF111827),
-    onBackground     = Color(0xFFE8EDF5),
+    onBackground     = Color(0xFFB8C4D8),
 
     surface          = Color(0xFF1C2840),
-    onSurface        = Color(0xFFE8EDF5),
+    onSurface        = Color(0xFFB8C4D8),
+
     surfaceVariant   = Color(0xFF1A2235),
 
     outline          = Color(0xFF2E3D5C),

@@ -73,15 +73,19 @@ private fun SearchInputCard(
     onDestinationChange : (String) -> Unit,
     focusRequester      : FocusRequester,
 ) {
+    val surface = MaterialTheme.colorScheme.surface
+    val outline = MaterialTheme.colorScheme.outline
+    val onSurf  = MaterialTheme.colorScheme.onSurface
+
     Surface(
         modifier       = Modifier.fillMaxWidth(),
         shape          = RoundedCornerShape(16.dp),
-        color          = BgCard,
+        color          = surface,
         tonalElevation = 0.dp,
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
 
-            // FROM — static (GPS detected, will be dynamic when backend is ready)
+            // FROM
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier          = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -98,21 +102,21 @@ private fun SearchInputCard(
                         text          = if (lang == "EN") "FROM" else "MULA",
                         fontSize      = 9.sp,
                         fontWeight    = FontWeight.Bold,
-                        color         = TextMuted,
+                        color         = onSurf.copy(alpha = 0.5f),
                         letterSpacing = 0.6.sp,
                     )
                     Text(
                         text       = "Crossing, Calamba",
                         fontSize   = 14.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color      = TextDark,
+                        color      = onSurf,
                     )
                 }
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = BorderLight)
+            HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp), color = outline)
 
-            // TO — Google Places autocomplete
+            // TO
             Row(
                 verticalAlignment = Alignment.Top,
                 modifier          = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -132,19 +136,14 @@ private fun SearchInputCard(
                         text          = if (lang == "EN") "TO" else "PATUNGO",
                         fontSize      = 9.sp,
                         fontWeight    = FontWeight.Bold,
-                        color         = TextMuted,
+                        color         = onSurf.copy(alpha = 0.5f),
                         letterSpacing = 0.6.sp,
                     )
                     Spacer(Modifier.height(2.dp))
-                    // PlacesSearchBar replaces BasicTextField —
-                    // shows autocomplete dropdown as user types,
-                    // restricted to PH for relevance
                     PlacesSearchBar(
                         value           = destination,
                         onValueChange   = onDestinationChange,
                         onPlaceSelected = { _, displayName ->
-                            // displayName goes to the field text
-                            // placeId is available here for backend route lookup later
                             onDestinationChange(displayName)
                         },
                         focusRequester  = focusRequester,
@@ -192,16 +191,16 @@ private fun TerminalsSectionHeader(lang: String, onSeeAll: () -> Unit) {
             text          = if (lang == "EN") "NEARBY TERMINALS" else "MGA TERMINAL SA MALAPIT",
             fontSize      = 10.sp,
             fontWeight    = FontWeight.Bold,
-            color         = TextMuted,
+            color         = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
             letterSpacing = 0.6.sp,
         )
         TextButton(onClick = onSeeAll, contentPadding = PaddingValues(0.dp)) {
             Text(if (lang == "EN") "See All" else "Tingnan Lahat", fontSize = 11.sp, color = BlueLight)
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector        = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = BlueLight,
-                modifier = Modifier.size(16.dp)
+                tint               = BlueLight,
+                modifier           = Modifier.size(16.dp),
             )
         }
     }

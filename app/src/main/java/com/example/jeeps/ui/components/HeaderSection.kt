@@ -1,10 +1,8 @@
 package com.example.jeeps.ui.components
 
 import androidx.compose.foundation.border
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
@@ -18,50 +16,39 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.jeeps.ui.theme.AccentYellow
-import com.example.jeeps.ui.theme.PrimaryBlue
 
 @Composable
 fun HeaderSection(
-    lang: String,
-    onLangChange: (String) -> Unit,
-    modifier: Modifier = Modifier,
+    lang         : String,
+    onLangChange : (String) -> Unit,
+    modifier     : Modifier = Modifier,
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(
-                color = PrimaryBlue,
-                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
-            )
-            .padding(horizontal = 24.dp, vertical = 20.dp),
+            .wrapContentHeight()
+            .padding(start = 24.dp, end = 24.dp, top = 48.dp, bottom = 0.dp),
     ) {
-        // Decorative ring
+        // Decorative ring — clipped so it doesn't affect layout height
         Box(
             modifier = Modifier
-                .size(180.dp)
+                .size(160.dp)
                 .align(Alignment.TopEnd)
-                .offset(x = 50.dp, y = (-50).dp)
+                .offset(x = 50.dp, y = (-30).dp)
                 .clip(CircleShape)
                 .border(28.dp, Color.White.copy(alpha = 0.06f), CircleShape)
         )
 
         Column {
-            Row(
-                modifier              = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment     = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text          = "JeePS · PH",
-                    color         = Color.White.copy(alpha = 0.5f),
-                    fontSize      = 11.sp,
-                    fontWeight    = FontWeight.Bold,
-                    letterSpacing = 1.sp,
-                )
-                LanguageToggle(lang = lang, onLangChange = onLangChange)
-            }
+            Text(
+                text          = "JeePS · PH",
+                color         = Color.White.copy(alpha = 0.5f),
+                fontSize      = 11.sp,
+                fontWeight    = FontWeight.Bold,
+                letterSpacing = 1.sp,
+            )
 
-            Spacer(Modifier.height(14.dp))
+            Spacer(Modifier.height(10.dp))
 
             Text(
                 text       = if (lang == "EN") "Where are you\ngoing?" else "Saan ka\npupunta ngayon?",
@@ -71,7 +58,7 @@ fun HeaderSection(
                 lineHeight = 34.sp,
             )
 
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(

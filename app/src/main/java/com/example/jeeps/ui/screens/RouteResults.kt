@@ -11,9 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,10 +53,15 @@ fun RouteResultsScreen(
         else          -> uiState.routes
     }
 
+    val bg      = MaterialTheme.colorScheme.background
+    val surface = MaterialTheme.colorScheme.surface
+    val outline = MaterialTheme.colorScheme.outline
+    val onSurf  = MaterialTheme.colorScheme.onSurface
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgApp),
+            .background(bg),
     ) {
         FlagStripe()
 
@@ -86,7 +89,8 @@ fun RouteResultsScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(origin,      fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Spacer(Modifier.width(8.dp))
-                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null, tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
+                        tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(8.dp))
                     Text(destination, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = AccentYellow)
                 }
@@ -103,10 +107,11 @@ fun RouteResultsScreen(
                     .fillMaxWidth().height(20.dp)
                     .align(Alignment.BottomCenter)
                     .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                    .background(BgApp),
+                    .background(bg),
             )
         }
 
+        // Filter chips
         Row(
             modifier = Modifier
                 .horizontalScroll(rememberScrollState())
@@ -118,13 +123,17 @@ fun RouteResultsScreen(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (isActive) PrimaryBlue else BgCard)
-                        .border(1.5.dp, if (isActive) PrimaryBlue else BorderLight, RoundedCornerShape(20.dp))
+                        .background(if (isActive) PrimaryBlue else surface)
+                        .border(1.5.dp, if (isActive) PrimaryBlue else outline, RoundedCornerShape(20.dp))
                         .clickable { activeFilter = label }
                         .padding(horizontal = 14.dp, vertical = 6.dp),
                 ) {
-                    Text(label, fontSize = 11.sp, fontWeight = FontWeight.Medium,
-                        color = if (isActive) Color.White else TextSubtle)
+                    Text(
+                        text       = label,
+                        fontSize   = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color      = if (isActive) Color.White else onSurf.copy(alpha = 0.6f),
+                    )
                 }
             }
         }
@@ -137,7 +146,11 @@ fun RouteResultsScreen(
             }
             uiState.error != null -> {
                 Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-                    Text("Couldn't load routes.\n${uiState.error}", fontSize = 13.sp, color = TextMuted)
+                    Text(
+                        "Couldn't load routes.\n${uiState.error}",
+                        fontSize = 13.sp,
+                        color    = onSurf.copy(alpha = 0.5f),
+                    )
                 }
             }
             else -> {
@@ -150,8 +163,15 @@ fun RouteResultsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     if (displayedRoutes.isEmpty()) {
-                        Box(Modifier.fillMaxWidth().padding(top = 40.dp), contentAlignment = Alignment.Center) {
-                            Text("No routes match this filter.", fontSize = 13.sp, color = TextMuted)
+                        Box(
+                            Modifier.fillMaxWidth().padding(top = 40.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                "No routes match this filter.",
+                                fontSize = 13.sp,
+                                color    = onSurf.copy(alpha = 0.5f),
+                            )
                         }
                     } else {
                         displayedRoutes.forEach { result ->

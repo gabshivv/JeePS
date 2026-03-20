@@ -11,12 +11,12 @@ import com.example.jeeps.ui.theme.*
 
 @Composable
 fun BottomNavBar(
-    lang: String,
-    selectedIndex: Int = 0,
+    lang          : String,
+    selectedIndex : Int = 0,
     onItemSelected: (Int) -> Unit = {},
 ) {
     NavigationBar(
-        containerColor = BgCard,
+        containerColor = MaterialTheme.colorScheme.surface,
         tonalElevation = 0.dp,
     ) {
         val items = listOf(
@@ -39,10 +39,10 @@ fun BottomNavBar(
                 },
                 icon   = { Icon(icon, contentDescription = label) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor   = BlueLight,
-                    selectedTextColor   = BlueLight,
-                    unselectedIconColor = TextMuted,
-                    unselectedTextColor = TextMuted,
+                    selectedIconColor   = PrimaryBlue,
+                    selectedTextColor   = PrimaryBlue,
+                    unselectedIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    unselectedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                     indicatorColor      = BlueTint,
                 ),
             )

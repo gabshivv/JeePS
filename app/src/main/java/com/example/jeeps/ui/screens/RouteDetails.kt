@@ -9,9 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,13 +34,16 @@ fun RouteDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(routeId) {
-        viewModel.load(routeId)
-    }
+    LaunchedEffect(routeId) { viewModel.load(routeId) }
+
+    val bg      = MaterialTheme.colorScheme.background
+    val surface = MaterialTheme.colorScheme.surface
+    val outline = MaterialTheme.colorScheme.outline
+    val onSurf  = MaterialTheme.colorScheme.onSurface
 
     if (uiState.isLoading) {
         Box(
-            modifier         = Modifier.fillMaxSize().background(BgApp),
+            modifier         = Modifier.fillMaxSize().background(bg),
             contentAlignment = Alignment.Center,
         ) {
             CircularProgressIndicator(color = PrimaryBlue)
@@ -54,10 +55,10 @@ fun RouteDetailScreen(
     val fare  = uiState.fare
     if (route == null || fare == null) {
         Box(
-            modifier         = Modifier.fillMaxSize().background(BgApp).padding(32.dp),
+            modifier         = Modifier.fillMaxSize().background(bg).padding(32.dp),
             contentAlignment = Alignment.Center,
         ) {
-            Text(uiState.error ?: "Route not found", fontSize = 13.sp, color = TextMuted)
+            Text(uiState.error ?: "Route not found", fontSize = 13.sp, color = onSurf.copy(alpha = 0.5f))
         }
         return
     }
@@ -68,7 +69,7 @@ fun RouteDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgApp),
+            .background(bg),
     ) {
         FlagStripe()
 
@@ -97,7 +98,7 @@ fun RouteDetailScreen(
                     .fillMaxWidth().height(20.dp)
                     .align(Alignment.BottomCenter)
                     .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                    .background(BgApp),
+                    .background(bg),
             )
         }
 
@@ -106,8 +107,7 @@ fun RouteDetailScreen(
                 routeCode   = route.routeCode,
                 origin      = route.origin,
                 destination = route.destination,
-                viaText     = route.stops.drop(1).dropLast(1)
-                    .joinToString(" · ") { it.barangayName },
+                viaText     = route.stops.drop(1).dropLast(1).joinToString(" · ") { it.barangayName },
                 routeType   = route.routeType,
                 size        = SignboardSize.FULL,
             )
@@ -126,11 +126,12 @@ fun RouteDetailScreen(
             BayanAlert(modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 8.dp))
         }
 
+        // Tab row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(BgApp)
-                .border(width = 2.dp, color = BorderLight, shape = RoundedCornerShape(0.dp))
+                .background(bg)
+                .border(width = 2.dp, color = outline, shape = RoundedCornerShape(0.dp))
                 .padding(horizontal = 20.dp),
         ) {
             tabs.forEachIndexed { i, label ->
@@ -139,21 +140,27 @@ fun RouteDetailScreen(
                     modifier = Modifier
                         .clickable { selectedTab = i }
                         .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .then(if (isActive) Modifier.border(
-                            2.dp, PrimaryBlue,
-                            RoundedCornerShape(bottomStart = 0.dp, bottomEnd = 0.dp)
-                        ) else Modifier),
+                        .then(
+                            if (isActive) Modifier.border(
+                                2.dp, PrimaryBlue,
+                                RoundedCornerShape(bottomStart = 0.dp, bottomEnd = 0.dp)
+                            ) else Modifier
+                        ),
                 ) {
-                    Text(label, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
-                        color = if (isActive) PrimaryBlue else TextMuted)
+                    Text(
+                        label,
+                        fontSize   = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color      = if (isActive) PrimaryBlue else onSurf.copy(alpha = 0.5f),
+                    )
                 }
             }
         }
 
         when (selectedTab) {
-            0 -> StopsTabContent(route = route)
-            1 -> LandmarksTabContent(route = route)
-            2 -> InfoTabContent(route = route, fare = fare)
+            0 -> StopsTabContent(route = route, bg = bg)
+            1 -> LandmarksTabContent(route = route, bg = bg, surface = surface, outline = outline, onSurf = onSurf)
+            2 -> InfoTabContent(route = route, fare = fare, bg = bg, surface = surface, outline = outline, onSurf = onSurf)
         }
     }
 }
@@ -183,11 +190,12 @@ private fun BayanAlert(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun StopsTabContent(route: Route) {
+private fun StopsTabContent(route: Route, bg: Color) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .background(bg)
             .padding(horizontal = 20.dp, vertical = 14.dp),
     ) {
         StopTimeline(
@@ -200,10 +208,19 @@ private fun StopsTabContent(route: Route) {
 }
 
 @Composable
-private fun LandmarksTabContent(route: Route) {
+private fun LandmarksTabContent(
+    route   : Route,
+    bg      : Color,
+    surface : Color,
+    outline : Color,
+    onSurf  : Color,
+) {
     if (route.landmarks.isEmpty()) {
-        Box(Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
-            Text("No landmarks recorded for this route yet.", fontSize = 13.sp, color = TextMuted)
+        Box(
+            Modifier.fillMaxSize().background(bg).padding(32.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text("No landmarks recorded for this route yet.", fontSize = 13.sp, color = onSurf.copy(alpha = 0.5f))
         }
         return
     }
@@ -211,6 +228,7 @@ private fun LandmarksTabContent(route: Route) {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .background(bg)
             .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
@@ -219,8 +237,8 @@ private fun LandmarksTabContent(route: Route) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(BgCard)
-                    .border(1.5.dp, BorderLight, RoundedCornerShape(12.dp))
+                    .background(surface)
+                    .border(1.5.dp, outline, RoundedCornerShape(12.dp))
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 verticalAlignment     = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -230,8 +248,8 @@ private fun LandmarksTabContent(route: Route) {
                     contentAlignment = Alignment.Center,
                 ) { Text("📍", fontSize = 18.sp) }
                 Column {
-                    Text(landmark.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = TextDark)
-                    Text(landmark.barangayName, fontSize = 11.sp, color = TextMuted,
+                    Text(landmark.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = onSurf)
+                    Text(landmark.barangayName, fontSize = 11.sp, color = onSurf.copy(alpha = 0.5f),
                         modifier = Modifier.padding(top = 2.dp))
                 }
             }
@@ -240,55 +258,80 @@ private fun LandmarksTabContent(route: Route) {
 }
 
 @Composable
-private fun InfoTabContent(route: Route, fare: FareResult) {
+private fun InfoTabContent(
+    route   : Route,
+    fare    : FareResult,
+    bg      : Color,
+    surface : Color,
+    outline : Color,
+    onSurf  : Color,
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .background(bg)
             .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        InfoCard("Fare") {
-            InfoRow("Regular",      "₱${"%.2f".format(fare.regularFare)}")
-            InfoRow("PWD / Senior", "₱${"%.2f".format(fare.discountedFare)}")
-            InfoRow("Base fare",    "₱13.00 (first 4 km)")
-            InfoRow("Per km after", "₱1.80")
+        InfoCard(title = "Fare", bg = bg, surface = surface, outline = outline, onSurf = onSurf) {
+            InfoRow("Regular",      "₱${"%.2f".format(fare.regularFare)}",      onSurf = onSurf)
+            InfoRow("PWD / Senior", "₱${"%.2f".format(fare.discountedFare)}",   onSurf = onSurf)
+            InfoRow("Base fare",    "₱13.00 (first 4 km)",                      onSurf = onSurf)
+            InfoRow("Per km after", "₱1.80",                                    onSurf = onSurf)
         }
-        InfoCard("Route") {
-            InfoRow("Type",      if (route.routeType == RouteType.BAYAN) "Bayan (Barangay roads)" else "National Highway")
-            InfoRow("Distance",  "${"%.1f".format(fare.distanceKm)} km")
-            InfoRow("Stops",     "${fare.stopCount}")
-            InfoRow("Direction", "${route.origin} → ${route.destination}")
-            InfoRow("Status",    route.status.name.lowercase().replaceFirstChar { it.uppercase() })
+        InfoCard(title = "Route", bg = bg, surface = surface, outline = outline, onSurf = onSurf) {
+            InfoRow("Type",      if (route.routeType == RouteType.BAYAN) "Bayan (Barangay roads)" else "National Highway", onSurf = onSurf)
+            InfoRow("Distance",  "${"%.1f".format(fare.distanceKm)} km",         onSurf = onSurf)
+            InfoRow("Stops",     "${fare.stopCount}",                            onSurf = onSurf)
+            InfoRow("Direction", "${route.origin} → ${route.destination}",       onSurf = onSurf)
+            InfoRow("Status",    route.status.name.lowercase().replaceFirstChar { it.uppercase() }, onSurf = onSurf)
         }
     }
 }
 
 @Composable
-private fun InfoCard(title: String, content: @Composable ColumnScope.() -> Unit) {
+private fun InfoCard(
+    title   : String,
+    bg      : Color,
+    surface : Color,
+    outline : Color,
+    onSurf  : Color,
+    content : @Composable ColumnScope.() -> Unit,
+) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(BgCard)
-            .border(1.5.dp, BorderLight, RoundedCornerShape(12.dp)),
+            .background(surface)
+            .border(1.5.dp, outline, RoundedCornerShape(12.dp)),
     ) {
-        Box(modifier = Modifier.fillMaxWidth().background(BgApp).padding(horizontal = 14.dp, vertical = 9.dp)) {
-            Text(title.uppercase(), fontSize = 9.5.sp, fontWeight = FontWeight.Bold,
-                color = TextMuted, letterSpacing = 0.6.sp)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(bg)
+                .padding(horizontal = 14.dp, vertical = 9.dp),
+        ) {
+            Text(
+                title.uppercase(),
+                fontSize      = 9.5.sp,
+                fontWeight    = FontWeight.Bold,
+                color         = onSurf.copy(alpha = 0.5f),
+                letterSpacing = 0.6.sp,
+            )
         }
         Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) { content() }
     }
 }
 
 @Composable
-private fun InfoRow(label: String, value: String) {
+private fun InfoRow(label: String, value: String, onSurf: Color) {
     Row(
         modifier              = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, fontSize = 12.sp, color = TextMuted)
-        Text(value, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = TextDark)
+        Text(label, fontSize = 12.sp, color = onSurf.copy(alpha = 0.5f))
+        Text(value, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = onSurf)
     }
 }
 

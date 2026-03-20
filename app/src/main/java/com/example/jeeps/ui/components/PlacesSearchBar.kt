@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -44,18 +45,15 @@ fun PlacesSearchBar(
     lang            : String = "EN",
     modifier        : Modifier = Modifier,
 ) {
-    val context  = LocalContext.current
-    val scope    = rememberCoroutineScope()
+    val context = LocalContext.current
+    val scope   = rememberCoroutineScope()
 
     var predictions  by remember { mutableStateOf<List<AutocompletePrediction>>(emptyList()) }
     var showDropdown by remember { mutableStateOf(false) }
     var isFocused    by remember { mutableStateOf(false) }
 
-    // Lazily initialize PlacesClient — safe to call multiple times
     val placesClient: PlacesClient = remember(context) {
         if (!Places.isInitialized()) {
-            // API key is read from the app's manifest meta-data
-            // (already wired via MAPS_API_KEY in local.properties + build.gradle)
             Places.initializeWithNewPlacesApiEnabled(context, getApiKey(context))
         }
         Places.createClient(context)
@@ -63,7 +61,11 @@ fun PlacesSearchBar(
 
     val sessionToken = remember { AutocompleteSessionToken.newInstance() }
 
-    // Fetch predictions whenever the query text changes
+    // Read theme colors inside the composable scope
+    val onSurface  = MaterialTheme.colorScheme.onSurface
+    val surface    = MaterialTheme.colorScheme.surface
+    val outline    = MaterialTheme.colorScheme.outline
+
     LaunchedEffect(value) {
         if (value.length < 2) {
             predictions  = emptyList()
@@ -73,9 +75,7 @@ fun PlacesSearchBar(
         scope.launch {
             val request = FindAutocompletePredictionsRequest.builder()
                 .setSessionToken(sessionToken)
-                // Restrict to Philippines for relevance
                 .setCountries("PH")
-                // Bias results toward Laguna (Calamba area)
                 .setQuery(value)
                 .build()
 
@@ -101,12 +101,12 @@ fun PlacesSearchBar(
                     showDropdown = false
                 }
             },
-            singleLine    = true,
-            cursorBrush   = SolidColor(PrimaryBlue),
-            textStyle     = TextStyle(
+            singleLine  = true,
+            cursorBrush = SolidColor(PrimaryBlue),
+            textStyle   = TextStyle(
                 fontSize   = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color      = TextDark,
+                color      = onSurface,          // was hardcoded TextDark
             ),
             modifier = Modifier
                 .fillMaxWidth()
@@ -120,7 +120,7 @@ fun PlacesSearchBar(
                     Text(
                         text     = if (lang == "EN") "Where are you going?" else "Saan ka pupunta?",
                         fontSize = 14.sp,
-                        color    = TextHint,
+                        color    = onSurface.copy(alpha = 0.35f),  // was TextHint
                     )
                 }
                 innerTextField()
@@ -132,7 +132,7 @@ fun PlacesSearchBar(
             Spacer(Modifier.height(8.dp))
             Surface(
                 shape          = RoundedCornerShape(12.dp),
-                color          = BgCard,
+                color          = surface,         // was BgCard
                 tonalElevation = 2.dp,
                 modifier       = Modifier.fillMaxWidth(),
             ) {
@@ -144,6 +144,7 @@ fun PlacesSearchBar(
                         PredictionRow(
                             primary   = prediction.getPrimaryText(null).toString(),
                             secondary = prediction.getSecondaryText(null).toString(),
+                            onSurface = onSurface,
                             onClick   = {
                                 val displayName = prediction.getPrimaryText(null).toString()
                                 onValueChange(displayName)
@@ -152,7 +153,7 @@ fun PlacesSearchBar(
                                 showDropdown = false
                             },
                         )
-                        HorizontalDivider(color = BorderLight, thickness = 0.5.dp)
+                        HorizontalDivider(color = outline, thickness = 0.5.dp)
                     }
                 }
             }
@@ -160,20 +161,19 @@ fun PlacesSearchBar(
     }
 }
 
-// ─── Single prediction row ────────────────────────────────────────────────────
-
 @Composable
 private fun PredictionRow(
     primary   : String,
     secondary : String,
+    onSurface : androidx.compose.ui.graphics.Color,
     onClick   : () -> Unit,
 ) {
     Row(
-        modifier          = Modifier
+        modifier              = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
             .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
+        verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Box(
@@ -195,20 +195,18 @@ private fun PredictionRow(
                 text       = primary,
                 fontSize   = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color      = TextDark,
+                color      = onSurface,
             )
             if (secondary.isNotBlank()) {
                 Text(
                     text     = secondary,
                     fontSize = 11.sp,
-                    color    = TextMuted,
+                    color    = onSurface.copy(alpha = 0.5f),
                 )
             }
         }
     }
 }
-
-// Helper: read API key from manifest meta-data
 
 private fun getApiKey(context: Context): String {
     val appInfo = context.packageManager

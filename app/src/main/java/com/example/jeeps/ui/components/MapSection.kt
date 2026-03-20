@@ -40,31 +40,24 @@ fun MapSection(modifier: Modifier = Modifier) {
         )
     }
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+    GoogleMap(
+        modifier            = modifier.fillMaxSize().clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
+        cameraPositionState = cameraPositionState,
+        properties          = MapProperties(
+            isMyLocationEnabled = locationPermissionGranted,
+        ),
+        uiSettings          = MapUiSettings(
+            zoomControlsEnabled     = false,
+            myLocationButtonEnabled = locationPermissionGranted,
+            compassEnabled          = true,
+            mapToolbarEnabled       = false,
+        ),
     ) {
-        GoogleMap(
-            modifier            = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState,
-            properties          = MapProperties(
-                isMyLocationEnabled = locationPermissionGranted,
-            ),
-            uiSettings          = MapUiSettings(
-                zoomControlsEnabled     = false,
-                myLocationButtonEnabled = locationPermissionGranted,
-                compassEnabled          = true,
-                mapToolbarEnabled       = false,
-            ),
-        ) {
-            if (!locationPermissionGranted) {
-                Marker(
-                    state = MarkerState(position = calambaLocation),
-                    title = "Crossing, Calamba",
-                )
-            }
+        if (!locationPermissionGranted) {
+            Marker(
+                state = MarkerState(position = calambaLocation),
+                title = "Crossing, Calamba",
+            )
         }
     }
 }

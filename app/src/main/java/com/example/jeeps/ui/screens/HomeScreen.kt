@@ -26,6 +26,10 @@ private const val TAB_SETTINGS = 3
 fun HomeScreen(
     onFindRoutes      : (origin: String, destination: String) -> Unit = { _, _ -> },
     onSeeAllTerminals : () -> Unit = {},
+    darkMode          : Boolean    = false,
+    onDarkChange      : (Boolean) -> Unit = {},
+    showSettings      : Boolean    = false,
+    onShowSettings    : (Boolean) -> Unit = {},
     viewModel         : HomeViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -36,12 +40,23 @@ fun HomeScreen(
 
     val scope          = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }
-    var mapFullScreen by remember { mutableStateOf(false) }
+    var mapFullScreen  by remember { mutableStateOf(false) }
+
+    if (showSettings) {
+        SettingsScreen(
+            onBack       = { onShowSettings(false) },
+            lang         = lang,
+            onLangChange = { lang = it },
+            darkMode     = darkMode,
+            onDarkChange = onDarkChange,
+        )
+        return
+    }
 
     val scaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(
-            initialValue        = SheetValue.Expanded,
-            skipHiddenState     = false,
+            initialValue    = SheetValue.Expanded,
+            skipHiddenState = false,
         )
     )
 
@@ -64,14 +79,12 @@ fun HomeScreen(
                     scaffoldState.bottomSheetState.hide()
                 }
                 TAB_SETTINGS -> {
-                    // TODO (P4): navigate to SettingsScreen
+                    onShowSettings(true)
                 }
             }
         }
     }
 
-    // If user drags the sheet back up manually while on Map tab,
-    // reset the full-screen flag so the nav state stays in sync.
     LaunchedEffect(scaffoldState.bottomSheetState.currentValue) {
         if (scaffoldState.bottomSheetState.currentValue != SheetValue.Hidden) {
             mapFullScreen = false
@@ -88,42 +101,50 @@ fun HomeScreen(
         },
         contentWindowInsets = WindowInsets.navigationBars,
     ) { innerPadding ->
-        BottomSheetScaffold(
-            scaffoldState       = scaffoldState,
-            sheetContainerColor = Color(0xFFF4F6FA),
-            sheetShape          = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
-            sheetPeekHeight     = 200.dp,
-            sheetDragHandle     = { BottomSheetDefaults.DragHandle() },
-            sheetContent        = {
-                Box(modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())) {
-                    SearchBottomSheetContent(
-                        lang                = lang,
-                        destination         = destination,
-                        onDestinationChange = { destination = it },
-                        terminals           = uiState.terminals,
-                        focusRequester      = focusRequester,
-                        onFindRoutes        = {
-                            if (destination.isNotBlank()) {
-                                onFindRoutes(uiState.detectedOrigin, destination)
-                            }
-                        },
-                        onSeeAllTerminals   = onSeeAllTerminals,
-                    )
-                }
-            },
-            modifier = Modifier.padding(innerPadding),
-        ) { bottomSheetPadding ->
+
+        // ── Layered layout: map fills full screen, sheet + header float on top ──
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+        ) {
+            // 1. Map fills the entire area behind everything
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(PrimaryBlue)
-                    .padding(if (mapFullScreen) PaddingValues(0.dp) else bottomSheetPadding),
+                    .background(PrimaryBlue),
             ) {
-                FlagStripe()
                 if (!mapFullScreen) {
+                    FlagStripe()
                     HeaderSection(lang = lang, onLangChange = { lang = it })
                 }
-                MapSection(modifier = Modifier.weight(1f))
+                MapSection(modifier = Modifier.fillMaxSize())
+            }
+
+            // 2. Bottom sheet floats on top of the map
+            if (!mapFullScreen) {
+                BottomSheetScaffold(
+                    scaffoldState       = scaffoldState,
+                    sheetContainerColor = MaterialTheme.colorScheme.background,
+                    sheetShape          = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+                    sheetPeekHeight     = 160.dp,
+                    sheetDragHandle     = { BottomSheetDefaults.DragHandle() },
+                    sheetContent        = {
+                        SearchBottomSheetContent(
+                            lang                = lang,
+                            destination         = destination,
+                            onDestinationChange = { destination = it },
+                            terminals           = uiState.terminals,
+                            focusRequester      = focusRequester,
+                            onFindRoutes        = {
+                                if (destination.isNotBlank()) {
+                                    onFindRoutes(uiState.detectedOrigin, destination)
+                                }
+                            },
+                            onSeeAllTerminals   = onSeeAllTerminals,
+                        )
+                    },
+                ) { /* map is behind, nothing needed here */ }
             }
         }
     }

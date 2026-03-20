@@ -36,10 +36,15 @@ fun TerminalsScreen(
     val uiState   by viewModel.uiState.collectAsStateWithLifecycle()
     val terminals : List<Terminal> = uiState.terminals
 
+    val bg      = MaterialTheme.colorScheme.background
+    val surface = MaterialTheme.colorScheme.surface
+    val outline = MaterialTheme.colorScheme.outline
+    val onSurf  = MaterialTheme.colorScheme.onSurface
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(BgApp),
+            .background(bg),
     ) {
         FlagStripe()
 
@@ -91,7 +96,7 @@ fun TerminalsScreen(
                     .height(20.dp)
                     .align(Alignment.BottomCenter)
                     .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
-                    .background(BgApp),
+                    .background(bg),
             )
         }
 
@@ -100,8 +105,8 @@ fun TerminalsScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment     = Alignment.CenterVertically,
         ) {
-            LegendDot(color = StatusGreen, label = "Normal")
-            LegendDot(color = StatusAmber, label = "Low units")
+            LegendDot(color = StatusGreen, label = "Normal",   textColor = onSurf.copy(alpha = 0.5f))
+            LegendDot(color = StatusAmber, label = "Low units", textColor = onSurf.copy(alpha = 0.5f))
         }
 
         LazyColumn(
@@ -115,20 +120,30 @@ fun TerminalsScreen(
                 items = terminals,
                 key   = { terminal -> terminal.id },
             ) { terminal ->
-                TerminalRow(terminal = terminal)
+                TerminalRow(
+                    terminal = terminal,
+                    surface  = surface,
+                    outline  = outline,
+                    onSurf   = onSurf,
+                )
             }
         }
     }
 }
 
 @Composable
-private fun TerminalRow(terminal: Terminal) {
+private fun TerminalRow(
+    terminal : Terminal,
+    surface  : Color,
+    outline  : Color,
+    onSurf   : Color,
+) {
     Row(
         modifier              = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(BgCard)
-            .border(1.5.dp, BorderLight, RoundedCornerShape(14.dp))
+            .background(surface)
+            .border(1.5.dp, outline, RoundedCornerShape(14.dp))
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -151,13 +166,13 @@ private fun TerminalRow(terminal: Terminal) {
                     text       = terminal.name,
                     fontSize   = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color      = TextDark,
+                    color      = onSurf,
                 )
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text     = terminal.routes.joinToString(" · "),
                     fontSize = 11.sp,
-                    color    = TextMuted,
+                    color    = onSurf.copy(alpha = 0.5f),
                 )
             }
         }
@@ -178,13 +193,13 @@ private fun TerminalRow(terminal: Terminal) {
 }
 
 @Composable
-private fun LegendDot(color: Color, label: String) {
+private fun LegendDot(color: Color, label: String, textColor: Color) {
     Row(
         verticalAlignment     = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         Box(modifier = Modifier.size(8.dp).background(color = color, shape = CircleShape))
-        Text(text = label, fontSize = 11.sp, color = TextMuted)
+        Text(text = label, fontSize = 11.sp, color = textColor)
     }
 }
 

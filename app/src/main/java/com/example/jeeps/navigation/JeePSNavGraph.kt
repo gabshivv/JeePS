@@ -28,7 +28,11 @@ sealed class Screen(val route: String) {
 
 @Composable
 fun JeePSNavGraph(
-    navController: NavHostController = rememberNavController()
+    navController  : NavHostController   = rememberNavController(),
+    darkMode       : Boolean             = false,
+    onDarkChange   : (Boolean) -> Unit   = {},
+    showSettings   : Boolean             = false,
+    onShowSettings : (Boolean) -> Unit   = {},
 ) {
     NavHost(
         navController       = navController,
@@ -49,6 +53,10 @@ fun JeePSNavGraph(
                 onSeeAllTerminals = {
                     navController.navigate(Screen.Terminals.route)
                 },
+                darkMode       = darkMode,
+                onDarkChange   = onDarkChange,
+                showSettings   = showSettings,
+                onShowSettings = onShowSettings,
             )
         }
 
