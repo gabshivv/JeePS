@@ -122,7 +122,7 @@ fun RouteDetailScreen(
             )
         }
 
-        if (route.routeType == RouteType.BAYAN) {
+        if (route.routeType == "bayan") {
             BayanAlert(modifier = Modifier.padding(horizontal = 20.dp).padding(bottom = 8.dp))
         }
 
@@ -292,7 +292,7 @@ private fun InfoTabContent(
             InfoRow("Per km after", "₱1.80",                                    onSurf = onSurf)
         }
         InfoCard(title = "Route", bg = bg, surface = surface, outline = outline, onSurf = onSurf) {
-            InfoRow("Type",      if (route.routeType == RouteType.BAYAN) "Bayan (Barangay roads)" else "National Highway", onSurf = onSurf)
+            InfoRow("Type",      if (route.routeType == "bayan") "Bayan (Barangay roads)" else "National Highway", onSurf = onSurf)
             InfoRow("Distance",  "${"%.1f".format(fare.distanceKm)} km",         onSurf = onSurf)
             InfoRow("Stops",     "${fare.stopCount}",                            onSurf = onSurf)
             InfoRow("Direction", "${route.originName} → ${route.destinationName}",       onSurf = onSurf)

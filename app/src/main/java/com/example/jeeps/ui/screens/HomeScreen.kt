@@ -24,7 +24,7 @@ private const val TAB_SETTINGS = 3
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onFindRoutes      : (origin: String, destination: String) -> Unit = { _, _ -> },
+    onFindRoutes      : (originId: Int, destId: Int, originName: String, destName: String) -> Unit = { _, _, _, _ -> },
     onSeeAllTerminals : () -> Unit = {},
     darkMode          : Boolean    = false,
     onDarkChange      : (Boolean) -> Unit = {},
@@ -36,7 +36,16 @@ fun HomeScreen(
 
     var lang        by remember { mutableStateOf("EN") }
     var selectedNav by remember { mutableIntStateOf(TAB_HOME) }
-    var destination by remember { mutableStateOf("") }
+    
+    var originText by remember { mutableStateOf("") }
+    var destinationText by remember { mutableStateOf("") }
+    
+    LaunchedEffect(uiState.selectedOrigin) {
+        uiState.selectedOrigin?.let { originText = it.displayName }
+    }
+    LaunchedEffect(uiState.selectedDestination) {
+        uiState.selectedDestination?.let { destinationText = it.displayName }
+    }
 
     val scope          = rememberCoroutineScope()
     val focusRequester = remember { FocusRequester() }
@@ -85,12 +94,6 @@ fun HomeScreen(
         }
     }
 
-    LaunchedEffect(scaffoldState.bottomSheetState.currentValue) {
-        if (scaffoldState.bottomSheetState.currentValue != SheetValue.Hidden) {
-            mapFullScreen = false
-        }
-    }
-
     Scaffold(
         bottomBar = {
             BottomNavBar(
@@ -102,13 +105,12 @@ fun HomeScreen(
         contentWindowInsets = WindowInsets.navigationBars,
     ) { innerPadding ->
 
-        // ── Layered layout: map fills full screen, sheet + header float on top ──
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            // 1. Map fills the entire area behind everything
+            // 1. Map Section
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -118,10 +120,15 @@ fun HomeScreen(
                     FlagStripe()
                     HeaderSection(lang = lang, onLangChange = { lang = it })
                 }
-                MapSection(modifier = Modifier.fillMaxSize())
+                MapSection(
+                    modifier = Modifier.fillMaxSize(),
+                    origin = uiState.selectedOrigin,
+                    destination = uiState.selectedDestination,
+                    barangays = uiState.barangays
+                )
             }
 
-            // 2. Bottom sheet floats on top of the map
+            // 2. Bottom Sheet Scaffold
             if (!mapFullScreen) {
                 BottomSheetScaffold(
                     scaffoldState       = scaffoldState,
@@ -132,19 +139,33 @@ fun HomeScreen(
                     sheetContent        = {
                         SearchBottomSheetContent(
                             lang                = lang,
-                            destination         = destination,
-                            onDestinationChange = { destination = it },
+                            origin              = originText,
+                            destination         = destinationText,
+                            onOriginChange      = { 
+                                originText = it
+                                viewModel.searchOrigin(it)
+                            },
+                            onDestinationChange = { 
+                                destinationText = it
+                                viewModel.searchDestination(it)
+                            },
+                            originResults       = uiState.originResults,
+                            destResults         = uiState.destResults,
+                            onOriginSelected    = { viewModel.setOrigin(it) },
+                            onDestSelected      = { viewModel.setDestination(it) },
                             terminals           = uiState.terminals,
                             focusRequester      = focusRequester,
                             onFindRoutes        = {
-                                if (destination.isNotBlank()) {
-                                    onFindRoutes(uiState.detectedOrigin, destination)
+                                val o = uiState.selectedOrigin
+                                val d = uiState.selectedDestination
+                                if (o != null && d != null) {
+                                    onFindRoutes(o.barangayId, d.barangayId, o.displayName, d.displayName)
                                 }
                             },
                             onSeeAllTerminals   = onSeeAllTerminals,
                         )
                     },
-                ) { /* map is behind, nothing needed here */ }
+                ) { /* map is behind */ }
             }
         }
     }

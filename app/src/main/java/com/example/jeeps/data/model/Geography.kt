@@ -19,5 +19,7 @@ data class City(
 data class Barangay(
     @SerialName("barangay_id") val id: Int,
     @SerialName("barangay_name") val name: String,
-    @SerialName("city_id") val cityId: Int
+    @SerialName("city_id") val cityId: Int,
+    val lat: Double = 0.0,
+    val lng: Double = 0.0
 )

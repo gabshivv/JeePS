@@ -153,10 +153,10 @@ fun RouteResultCard(
 }
 
 @Composable
-private fun RouteTypeBadge(routeType: RouteType) {
+private fun RouteTypeBadge(routeType: String) {
     val (label, bg, fg) = when (routeType) {
-        RouteType.BAYAN            -> Triple("BAYAN",     BayanBadgeBg,  BayanBadgeText)
-        RouteType.NATIONAL_HIGHWAY -> Triple("NAT'L HWY", NhwyBadgeBg,   NhwyBadgeText)
+        "bayan"     -> Triple("BAYAN",     BayanBadgeBg,  BayanBadgeText)
+        else        -> Triple("NAT'L HWY", NhwyBadgeBg,   NhwyBadgeText)
     }
     Box(
         modifier = Modifier

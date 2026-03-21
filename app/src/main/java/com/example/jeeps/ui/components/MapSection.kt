@@ -18,7 +18,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.jeeps.data.model.Barangay
 import com.example.jeeps.data.model.Route
+import com.example.jeeps.data.model.barangayName
+import com.example.jeeps.data.repository.DestinationResult
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
@@ -28,20 +32,35 @@ import com.google.maps.android.compose.*
 @Composable
 fun MapSection(
     modifier: Modifier = Modifier,
-    activeRoute: Route? = null
+    activeRoute: Route? = null,
+    origin: DestinationResult? = null,
+    destination: DestinationResult? = null,
+    barangays: List<Barangay> = emptyList()
 ) {
-    val calambaLocation     = LatLng(14.2046, 121.1560)
+    val calambaLocation     = LatLng(14.2137, 121.1620)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(calambaLocation, 12f)
+        position = CameraPosition.fromLatLngZoom(calambaLocation, 13f)
     }
 
     var mapType by remember { mutableStateOf(MapType.NORMAL) }
     var showMapTypeMenu by remember { mutableStateOf(false) }
 
-    // Adjust camera if a route is active
-    LaunchedEffect(activeRoute) {
-        activeRoute?.path?.firstOrNull()?.let {
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(it, 12f)
+    val routePath = remember(activeRoute) {
+        activeRoute?.path?.ifEmpty {
+            activeRoute.stops.mapNotNull { segment ->
+                segment.barangay?.let { LatLng(it.lat, it.lng) }
+            }
+        } ?: emptyList()
+    }
+
+    // Adjust camera to show the route or selected points
+    LaunchedEffect(routePath, origin, destination) {
+        if (routePath.isNotEmpty()) {
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(routePath[routePath.size / 2], 13f)
+        } else if (destination != null) {
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(destination.lat, destination.lng), 14f)
+        } else if (origin != null) {
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(origin.lat, origin.lng), 14f)
         }
     }
 
@@ -71,7 +90,8 @@ fun MapSection(
             cameraPositionState = cameraPositionState,
             properties          = MapProperties(
                 isMyLocationEnabled = locationPermissionGranted,
-                mapType             = mapType
+                mapType             = mapType,
+                isTrafficEnabled    = true
             ),
             uiSettings          = MapUiSettings(
                 zoomControlsEnabled     = false,
@@ -80,41 +100,70 @@ fun MapSection(
                 mapToolbarEnabled       = false,
             ),
         ) {
-            // Draw the Route Path
-            activeRoute?.path?.let { points ->
-                if (points.isNotEmpty()) {
-                    Polyline(
-                        points = points,
-                        color = Color(0xFF1976D2), // Jeepney Route Blue
-                        width = 15f,
-                        jointType = JointType.ROUND,
-                        startCap = RoundCap(),
-                        endCap = RoundCap()
-                    )
-
-                    // Origin Marker
+            // Visualize all barangays if no route is active
+            if (activeRoute == null) {
+                barangays.forEach { brgy ->
                     Marker(
-                        state = MarkerState(position = points.first()),
-                        title = "Origin: ${activeRoute.originName}",
-                    )
-
-                    // Destination Marker
-                    Marker(
-                        state = MarkerState(position = points.last()),
-                        title = "Destination: ${activeRoute.destinationName}",
+                        state = MarkerState(position = LatLng(brgy.lat, brgy.lng)),
+                        title = brgy.name,
+                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
+                        alpha = 0.6f
                     )
                 }
             }
 
-            if (activeRoute == null && !locationPermissionGranted) {
+            // Draw Selected Origin Marker
+            origin?.let {
                 Marker(
-                    state = MarkerState(position = calambaLocation),
-                    title = "Crossing, Calamba",
+                    state = MarkerState(position = LatLng(it.lat, it.lng)),
+                    title = it.displayName,
+                    snippet = "Start Point",
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)
                 )
+            }
+
+            // Draw Selected Destination Marker
+            destination?.let {
+                Marker(
+                    state = MarkerState(position = LatLng(it.lat, it.lng)),
+                    title = it.displayName,
+                    snippet = "End Point",
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                )
+            }
+
+            // Draw the Route Path
+            if (routePath.isNotEmpty()) {
+                Polyline(
+                    points = routePath,
+                    color = Color(0xFF1976D2),
+                    width = 12f,
+                    jointType = JointType.ROUND,
+                    startCap = RoundCap(),
+                    endCap = RoundCap()
+                )
+
+                activeRoute?.stops?.forEachIndexed { index, segment ->
+                    val isOrigin = index == 0
+                    val isDest = index == activeRoute.stops.lastIndex
+                    val pos = segment.barangay?.let { LatLng(it.lat, it.lng) }
+                    
+                    if (pos != null) {
+                        Marker(
+                            state = MarkerState(position = pos),
+                            title = segment.barangayName,
+                            snippet = if (isOrigin) "Origin" else if (isDest) "Destination" else "Stop",
+                            icon = BitmapDescriptorFactory.defaultMarker(
+                                if (isOrigin) BitmapDescriptorFactory.HUE_AZURE
+                                else if (isDest) BitmapDescriptorFactory.HUE_RED
+                                else BitmapDescriptorFactory.HUE_ORANGE
+                            )
+                        )
+                    }
+                }
             }
         }
 
-        // Map Type Selector Button
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
