@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -333,10 +334,23 @@ private fun InfoCard(
 private fun InfoRow(label: String, value: String, onSurf: Color) {
     Row(
         modifier              = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment     = Alignment.Top,
     ) {
-        Text(label, fontSize = 12.sp, color = onSurf.copy(alpha = 0.5f))
-        Text(value, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = onSurf)
+        Text(
+            text     = label,
+            fontSize = 12.sp,
+            color    = onSurf.copy(alpha = 0.5f),
+            modifier = Modifier.width(80.dp) 
+        )
+        Text(
+            text       = value,
+            fontSize   = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color      = onSurf,
+            modifier   = Modifier.weight(1f),
+            textAlign  = TextAlign.End,
+        )
     }
 }
 

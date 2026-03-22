@@ -28,8 +28,8 @@ class RouteDetailViewModel(
     private val _uiState = MutableStateFlow(RouteDetailUiState())
     val uiState: StateFlow<RouteDetailUiState> = _uiState.asStateFlow()
 
-    fun load(routeId: Int) {
-        Log.d(TAG, "Loading route details for ID: $routeId")
+    fun load(routeId: Int, originId: Int = 0, destId: Int = 0) {
+        Log.d(TAG, "Loading route details for ID: $routeId (Origin: $originId, Dest: $destId)")
         viewModelScope.launch {
             _uiState.value = RouteDetailUiState(isLoading = true)
             try {
@@ -38,21 +38,25 @@ class RouteDetailViewModel(
                     Log.e(TAG, "Route not found for ID: $routeId")
                 }
                 
-                // Fetch fare from search if possible, otherwise use a default one based on route stops
-                // Note: searchRoutes(0,0) is a hack to get all routes from search results if repository allows it
-                val searchedFare = try {
-                    repository.searchRoutes(0, 0)
-                        .find { it.route.id == routeId }
-                        ?.fare
-                } catch (e: Exception) {
-                    null
-                }
+                // Fetch fare from search results for consistency
+                val searchedFare = if (originId != 0 && destId != 0) {
+                    try {
+                        repository.searchRoutes(originId, destId)
+                            .find { it.route.id == routeId }
+                            ?.fare
+                    } catch (e: Exception) {
+                        null
+                    }
+                } else null
                 
+                // Fallback fare with conditional distance
                 val fare = searchedFare ?: route?.let { 
+                    val distance = if (it.routeType.lowercase() == "bayan") 36.0 else 30.0
+                    val regFare = 13.0 + (if (distance > 4) (distance - 4) * 1.8 else 0.0)
                     FareResult(
-                        regularFare = 13.0, 
-                        discountedFare = 10.4, 
-                        distanceKm = 0.0, 
+                        regularFare = regFare,
+                        discountedFare = regFare * 0.8, // 20% deduction
+                        distanceKm = distance,
                         stopCount = it.stops.size
                     )
                 }

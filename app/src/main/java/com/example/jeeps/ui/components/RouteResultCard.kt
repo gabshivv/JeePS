@@ -59,8 +59,8 @@ fun RouteResultCard(
         Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
             SignboardCard(
                 routeCode   = route.routeCode,
-                origin      = route.originName, // Updated
-                destination = route.destinationName, // Updated
+                origin      = route.originName,
+                destination = route.destinationName,
                 viaText     = route.stops
                     .drop(1)
                     .dropLast(1)
@@ -98,7 +98,7 @@ fun RouteResultCard(
                 .padding(bottom = 4.dp),
         ) {
             StatCell(
-                value      = "₱${fare.regularFare.toInt()}",
+                value      = "₱${"%.2f".format(fare.regularFare)}",
                 label      = "Fare",
                 valueColor = PrimaryRed,
                 modifier   = Modifier.weight(1f),

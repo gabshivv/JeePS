@@ -53,12 +53,13 @@ class SupabaseJeePSRepository(
             }
 
             matchingRoutes.map { route ->
-                val distance = route.stops.size * 1.5 
+                val distance = if (route.routeType.lowercase() == "bayan") 36.0 else 30.0
+                val regFare = 13.0 + (if (distance > 4) (distance - 4) * 1.8 else 0.0)
                 RouteSearchResult(
                     route = route,
                     fare = FareResult(
-                        regularFare = 13.0 + (if (distance > 4) (distance - 4) * 1.8 else 0.0),
-                        discountedFare = 10.4 + (if (distance > 4) (distance - 4) * 1.5 else 0.0),
+                        regularFare = regFare,
+                        discountedFare = regFare * 0.8, // 20% deduction
                         distanceKm = distance,
                         stopCount = route.stops.size
                     ),
@@ -86,7 +87,7 @@ class SupabaseJeePSRepository(
                 }
                 .decodeSingleOrNull<Route>()
             
-            return@withContext result?.let { enrichRouteWithCoordinates(it) }
+            return@withContext result?.let { enrichRoute(it) }
         } catch (e: Exception) {
             Log.e(TAG, "Exception fetching route $routeId", e)
             null
@@ -102,29 +103,76 @@ class SupabaseJeePSRepository(
                     terminal_assignment(*, terminal(*))
                 """.trimIndent()))
                 .decodeList<Route>()
-            return@withContext result.map { enrichRouteWithCoordinates(it) }
+            return@withContext result.map { enrichRoute(it) }
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching all routes", e)
             throw e
         }
     }
 
-    private fun enrichRouteWithCoordinates(route: Route): Route {
-        return route.copy(
-            stops = route.stops.map { stop ->
-                if (stop.barangay != null && stop.barangay.lat == 0.0) {
-                    val coords = getBarangayCoordinates(stop.barangay.name, route.routeType)
-                    stop.copy(barangay = stop.barangay.copy(lat = coords.latitude, lng = coords.longitude))
-                } else stop
+    private fun enrichRoute(route: Route): Route {
+        val totalDistance = if (route.routeType.lowercase() == "bayan") 36.0 else 30.0
+        val stopCount = route.stops.size
+        
+        val stopsWithData = route.stops.mapIndexed { index, stop ->
+            val dist = if (stopCount > 1) (index.toDouble() / (stopCount - 1)) * totalDistance else 0.0
+            
+            val updatedStop = if (stop.barangay != null && stop.barangay.lat == 0.0) {
+                val coords = getBarangayCoordinates(stop.barangay.name, route.routeType)
+                stop.copy(
+                    barangay = stop.barangay.copy(lat = coords.latitude, lng = coords.longitude),
+                    distanceFromOriginKm = dist
+                )
+            } else {
+                stop.copy(distanceFromOriginKm = dist)
             }
+            updatedStop
+        }
+
+        return route.copy(
+            stops = stopsWithData,
+            landmarks = getHardcodedLandmarks(stopsWithData)
         )
+    }
+
+    private fun getHardcodedLandmarks(stops: List<RouteSegment>): List<Landmark> {
+        val landmarkMappings = listOf(
+            "San Pedro Boundary" to "Nueva",
+            "Pacita Complex" to "Nueva",
+            "United Bayanihan" to "San Antonio",
+            "Olivarez Plaza" to "Canlalay",
+            "Pavilion Mall" to "San Antonio",
+            "Central Mall" to "Platero",
+            "SM City Santa Rosa" to "Tagapo",
+            "Robinsons Sta. Rosa" to "Tagapo",
+            "Balibago Complex" to "Balibago",
+            "Coca-Cola Plant" to "Pulo",
+            "Mamatid Terminal" to "Mamatid",
+            "Check Point" to "Paciano",
+            "SM City Calamba" to "Real",
+            "Calamba Crossing" to "Crossing"
+        )
+
+        return landmarkMappings.mapNotNull { (landmarkName, brgyName) ->
+            val stop = stops.find { it.barangay?.name?.contains(brgyName, ignoreCase = true) == true }
+            if (stop != null) {
+                Landmark(
+                    landmarkId = landmarkName.hashCode(),
+                    name = landmarkName,
+                    barangayId = stop.barangayId,
+                    barangayName = stop.barangay?.name ?: brgyName
+                )
+            } else null
+        }
     }
 
     override suspend fun getTerminals(cityId: Int?): List<Terminal> = withContext(Dispatchers.IO) {
         try {
-            client.postgrest["terminal"].select {
+            val terminals = client.postgrest["terminal"].select {
                 if (cityId != null) filter { eq("city_id", cityId) }
             }.decodeList<Terminal>()
+            
+            terminals.map { it.copy(unitCount = 5) }
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching terminals", e)
             emptyList()

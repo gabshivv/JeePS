@@ -46,7 +46,7 @@ fun FareBanner(
                     lineHeight = 32.sp,
                 )
                 Text(
-                    text     = "₱${"%.2f".format(discountedFare)} for PWD / Senior",
+                    text     = "₱${"%.2f".format(discountedFare)} for PWD / Senior / Students",
                     fontSize = 10.sp,
                     color    = FareSubText,
                 )

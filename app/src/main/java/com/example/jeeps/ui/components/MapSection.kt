@@ -22,10 +22,12 @@ import com.example.jeeps.data.model.Barangay
 import com.example.jeeps.data.model.Route
 import com.example.jeeps.data.model.barangayName
 import com.example.jeeps.data.repository.DestinationResult
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.RoundCap
 import com.google.maps.android.compose.*
 
@@ -56,11 +58,29 @@ fun MapSection(
     // Adjust camera to show the route or selected points
     LaunchedEffect(routePath, origin, destination) {
         if (routePath.isNotEmpty()) {
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(routePath[routePath.size / 2], 13f)
+            val builder = LatLngBounds.Builder()
+            routePath.forEach { builder.include(it) }
+            val bounds = builder.build()
+            
+            cameraPositionState.move(
+                update = CameraUpdateFactory.newLatLngBounds(bounds, 150)
+            )
+        } else if (destination != null && origin != null) {
+            val builder = LatLngBounds.Builder()
+            builder.include(LatLng(origin.lat, origin.lng))
+            builder.include(LatLng(destination.lat, destination.lng))
+            val bounds = builder.build()
+            cameraPositionState.move(
+                update = CameraUpdateFactory.newLatLngBounds(bounds, 150)
+            )
         } else if (destination != null) {
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(destination.lat, destination.lng), 14f)
+            cameraPositionState.move(
+                update = CameraUpdateFactory.newLatLngZoom(LatLng(destination.lat, destination.lng), 14f)
+            )
         } else if (origin != null) {
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(origin.lat, origin.lng), 14f)
+            cameraPositionState.move(
+                update = CameraUpdateFactory.newLatLngZoom(LatLng(origin.lat, origin.lng), 14f)
+            )
         }
     }
 
