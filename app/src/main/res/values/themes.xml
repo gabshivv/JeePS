@@ -2,4 +2,15 @@
 <resources>
 
     <style name="Theme.JeePS" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Make the background match your app's background color (BgApp: #F4F6FA) -->
+        <item name="windowSplashScreenBackground">#F4F6FA</item>
+        <!-- Set the icon to transparent to hide the logo -->
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
+        <!-- Duration to display the splash screen -->
+        <item name="windowSplashScreenAnimationDuration">0</item>
+        <!-- Theme to switch to after the splash screen is gone -->
+        <item name="postSplashScreenTheme">@style/Theme.JeePS</item>
+    </style>
 </resources>

@@ -166,7 +166,7 @@ fun MapSection(
 
         Box(
             modifier = Modifier
-                .align(Alignment.TopEnd)
+                .align(Alignment.TopStart)
                 .padding(16.dp)
         ) {
             FloatingActionButton(

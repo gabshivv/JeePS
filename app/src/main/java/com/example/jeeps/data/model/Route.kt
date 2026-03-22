@@ -46,7 +46,7 @@ enum class RouteStatus {
 data class Route(
     @SerialName("route_id") val id: Int,
     @SerialName("route_name") val displayName: String,
-    @SerialName("route_code") val routeCode: String = "N/A",
+    @SerialName("route_code") val routeCode: String = "SP-CAL",
     @SerialName("type") val routeType: String,
     @SerialName("status") val status: RouteStatus = RouteStatus.ACTIVE,
     @SerialName("route_segment") val stops: List<RouteSegment> = emptyList(),

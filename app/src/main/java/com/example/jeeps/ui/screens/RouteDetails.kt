@@ -64,7 +64,7 @@ fun RouteDetailScreen(
     }
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Stops", "Landmarks", "Map", "Info")
+    val tabs = listOf("Map", "Stops", "Landmarks", "Info")
 
     Column(
         modifier = Modifier
@@ -139,13 +139,7 @@ fun RouteDetailScreen(
                 Box(
                     modifier = Modifier
                         .clickable { selectedTab = i }
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .then(
-                            if (isActive) Modifier.border(
-                                2.dp, PrimaryBlue,
-                                RoundedCornerShape(bottomStart = 0.dp, bottomEnd = 0.dp)
-                            ) else Modifier
-                        ),
+                        .padding(horizontal = 12.dp, vertical = 8.dp),
                 ) {
                     Text(
                         label,
@@ -158,9 +152,9 @@ fun RouteDetailScreen(
         }
 
         when (selectedTab) {
-            0 -> StopsTabContent(route = route, bg = bg)
-            1 -> LandmarksTabContent(route = route, bg = bg, surface = surface, outline = outline, onSurf = onSurf)
-            2 -> MapTabContent(route = route)
+            0 -> MapTabContent(route = route)
+            1 -> StopsTabContent(route = route, bg = bg)
+            2 -> LandmarksTabContent(route = route, bg = bg, surface = surface, outline = outline, onSurf = onSurf)
             3 -> InfoTabContent(route = route, fare = fare, bg = bg, surface = surface, outline = outline, onSurf = onSurf)
         }
     }

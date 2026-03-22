@@ -3,6 +3,7 @@ package com.example.jeeps.navigation
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,6 +12,7 @@ import com.example.jeeps.ui.screens.HomeScreen
 import com.example.jeeps.ui.screens.RouteDetailScreen
 import com.example.jeeps.ui.screens.RouteResultsScreen
 import com.example.jeeps.ui.screens.TerminalsScreen
+import com.example.jeeps.ui.viewmodels.HomeViewModel
 
 sealed class Screen(val route: String) {
     object Home      : Screen("home")
@@ -29,6 +31,7 @@ sealed class Screen(val route: String) {
 @Composable
 fun JeePSNavGraph(
     navController  : NavHostController   = rememberNavController(),
+    viewModel      : HomeViewModel       = viewModel(),
     darkMode       : Boolean             = false,
     onDarkChange   : (Boolean) -> Unit   = {},
     showSettings   : Boolean             = false,
@@ -45,6 +48,7 @@ fun JeePSNavGraph(
 
         composable(Screen.Home.route) {
             HomeScreen(
+                viewModel         = viewModel,
                 onFindRoutes      = { oId: Int, dId: Int, oName: String, dName: String ->
                     navController.navigate(
                         Screen.RouteResults.createRoute(oId, dId, oName, dName)
