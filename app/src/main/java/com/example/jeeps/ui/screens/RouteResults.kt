@@ -31,24 +31,26 @@ import com.example.jeeps.ui.viewmodels.RouteResultsViewModel
 
 @Composable
 fun RouteResultsScreen(
-    origin          : String = "Crossing",
-    destination     : String = "Cabuyao Bayan",
+    originId        : Int,
+    destId          : Int,
+    originName      : String,
+    destinationName : String,
     onBack          : () -> Unit = {},
     onRouteSelected : (routeId: Int) -> Unit = {},
     viewModel       : RouteResultsViewModel = viewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(origin, destination) {
-        viewModel.search(origin, destination)
+    LaunchedEffect(originId, destId) {
+        viewModel.search(originId, destId)
     }
 
     var activeFilter by remember { mutableStateOf("All") }
     val filters = listOf("All", "Bayan", "Nat'l Hwy", "Lowest Fare")
 
     val displayedRoutes = when (activeFilter) {
-        "Bayan"       -> uiState.routes.filter { it.route.routeType == RouteType.BAYAN }
-        "Nat'l Hwy"   -> uiState.routes.filter { it.route.routeType == RouteType.NATIONAL_HIGHWAY }
+        "Bayan"       -> uiState.routes.filter { it.route.routeType.lowercase() == "bayan" }
+        "Nat'l Hwy"   -> uiState.routes.filter { it.route.routeType.lowercase().contains("hiway") || it.route.routeType.lowercase().contains("national") }
         "Lowest Fare" -> uiState.routes.sortedBy { it.fare.regularFare }
         else          -> uiState.routes
     }
@@ -87,12 +89,12 @@ fun RouteResultsScreen(
                     Text("Back", fontSize = 11.sp, color = Color.White.copy(alpha = 0.65f))
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(origin, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(originName, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
                     Spacer(Modifier.width(8.dp))
                     Icon(Icons.AutoMirrored.Filled.ArrowForward, null,
                         tint = Color.White.copy(alpha = 0.5f), modifier = Modifier.size(12.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(destination, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = AccentYellow)
+                    Text(destinationName, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = AccentYellow)
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(

@@ -3,6 +3,7 @@ package com.example.jeeps.ui.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.jeeps.data.model.RouteSearchResult
+import com.example.jeeps.data.model.FareResult
 import com.example.jeeps.data.repository.JeePSRepository
 import com.example.jeeps.data.repository.SupabaseJeePSRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,21 +24,11 @@ class RouteResultsViewModel(
     private val _uiState = MutableStateFlow(RouteResultsUiState())
     val uiState: StateFlow<RouteResultsUiState> = _uiState.asStateFlow()
 
-    fun search(origin: String, destination: String) {
+    fun search(originId: Int, destinationId: Int) {
         viewModelScope.launch {
             _uiState.value = RouteResultsUiState(isLoading = true)
             try {
-                // Fetch all routes from Supabase to ensure your new route shows up
-                val allRoutes = repository.getAllRoutes()
-                
-                // Convert to search results
-                val results = allRoutes.map { route ->
-                    RouteSearchResult(
-                        route = route,
-                        fare = com.example.jeeps.data.model.FareResult(13.0, 10.4, 0.0, route.stops.size),
-                        isBestMatch = false
-                    )
-                }
+                val results = repository.searchRoutes(originId, destinationId)
                 
                 _uiState.value = RouteResultsUiState(
                     routes    = results,

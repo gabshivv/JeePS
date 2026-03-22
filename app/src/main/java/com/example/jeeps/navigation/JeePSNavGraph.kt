@@ -16,9 +16,9 @@ sealed class Screen(val route: String) {
     object Home      : Screen("home")
     object Terminals : Screen("terminals")
 
-    object RouteResults : Screen("route_results/{origin}/{destination}") {
-        fun createRoute(origin: String, destination: String) =
-            "route_results/$origin/$destination"
+    object RouteResults : Screen("route_results/{originId}/{destId}/{originName}/{destName}") {
+        fun createRoute(originId: Int, destId: Int, originName: String, destName: String) =
+            "route_results/$originId/$destId/$originName/$destName"
     }
 
     object RouteDetail : Screen("route_detail/{routeId}") {
@@ -45,9 +45,9 @@ fun JeePSNavGraph(
 
         composable(Screen.Home.route) {
             HomeScreen(
-                onFindRoutes      = { origin, destination ->
+                onFindRoutes      = { oId: Int, dId: Int, oName: String, dName: String ->
                     navController.navigate(
-                        Screen.RouteResults.createRoute(origin, destination)
+                        Screen.RouteResults.createRoute(oId, dId, oName, dName)
                     )
                 },
                 onSeeAllTerminals = {
@@ -67,13 +67,18 @@ fun JeePSNavGraph(
         }
 
         composable(Screen.RouteResults.route) { backStackEntry ->
-            val origin      = backStackEntry.arguments?.getString("origin")      ?: ""
-            val destination = backStackEntry.arguments?.getString("destination") ?: ""
+            val originId    = backStackEntry.arguments?.getString("originId")?.toIntOrNull() ?: 0
+            val destId      = backStackEntry.arguments?.getString("destId")?.toIntOrNull()   ?: 0
+            val originName  = backStackEntry.arguments?.getString("originName") ?: ""
+            val destName    = backStackEntry.arguments?.getString("destName")   ?: ""
+            
             RouteResultsScreen(
-                origin          = origin,
-                destination     = destination,
+                originId        = originId,
+                destId          = destId,
+                originName      = originName,
+                destinationName = destName,
                 onBack          = { navController.popBackStack() },
-                onRouteSelected = { routeId ->
+                onRouteSelected = { routeId: Int ->
                     navController.navigate(Screen.RouteDetail.createRoute(routeId))
                 },
             )

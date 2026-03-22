@@ -11,7 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,13 +21,20 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.focus.FocusRequester
 import com.example.jeeps.data.model.Terminal
+import com.example.jeeps.data.repository.DestinationResult
 import com.example.jeeps.ui.theme.*
 
 @Composable
 fun SearchBottomSheetContent(
     lang                : String,
+    origin              : String,
     destination         : String,
+    onOriginChange      : (String) -> Unit,
     onDestinationChange : (String) -> Unit,
+    originResults       : List<DestinationResult> = emptyList(),
+    destResults         : List<DestinationResult> = emptyList(),
+    onOriginSelected    : (DestinationResult) -> Unit = {},
+    onDestSelected      : (DestinationResult) -> Unit = {},
     terminals           : List<Terminal>,
     onFindRoutes        : () -> Unit = {},
     onSeeAllTerminals   : () -> Unit = {},
@@ -42,14 +49,20 @@ fun SearchBottomSheetContent(
     ) {
         SearchInputCard(
             lang                = lang,
+            origin              = origin,
             destination         = destination,
+            onOriginChange      = onOriginChange,
             onDestinationChange = onDestinationChange,
+            originResults       = originResults,
+            destResults         = destResults,
+            onOriginSelected    = onOriginSelected,
+            onDestSelected      = onDestSelected,
             focusRequester      = focusRequester,
         )
         Spacer(Modifier.height(16.dp))
         FindRoutesButton(
             lang    = lang,
-            enabled = destination.isNotBlank(),
+            enabled = origin.isNotBlank() && destination.isNotBlank(),
             onClick = onFindRoutes,
         )
         Spacer(Modifier.height(20.dp))
@@ -69,8 +82,14 @@ fun SearchBottomSheetContent(
 @Composable
 private fun SearchInputCard(
     lang                : String,
+    origin              : String,
     destination         : String,
+    onOriginChange      : (String) -> Unit,
     onDestinationChange : (String) -> Unit,
+    originResults       : List<DestinationResult>,
+    destResults         : List<DestinationResult>,
+    onOriginSelected    : (DestinationResult) -> Unit,
+    onDestSelected      : (DestinationResult) -> Unit,
     focusRequester      : FocusRequester,
 ) {
     val surface = MaterialTheme.colorScheme.surface
@@ -87,7 +106,7 @@ private fun SearchInputCard(
 
             // FROM
             Row(
-                verticalAlignment = Alignment.CenterVertically,
+                verticalAlignment = Alignment.Top,
                 modifier          = Modifier.fillMaxWidth().padding(vertical = 4.dp),
             ) {
                 Box(
@@ -97,7 +116,7 @@ private fun SearchInputCard(
                     Icon(Icons.Default.LocationOn, null, tint = BlueLight, modifier = Modifier.size(14.dp))
                 }
                 Spacer(Modifier.width(12.dp))
-                Column {
+                Column(Modifier.weight(1f)) {
                     Text(
                         text          = if (lang == "EN") "FROM" else "MULA",
                         fontSize      = 9.sp,
@@ -105,11 +124,15 @@ private fun SearchInputCard(
                         color         = onSurf.copy(alpha = 0.5f),
                         letterSpacing = 0.6.sp,
                     )
-                    Text(
-                        text       = "Crossing, Calamba",
-                        fontSize   = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color      = onSurf,
+                    Spacer(Modifier.height(2.dp))
+                    PlacesSearchBar(
+                        value           = origin,
+                        onValueChange   = onOriginChange,
+                        onResultSelected = onOriginSelected,
+                        localResults    = originResults,
+                        placeholder     = if (lang == "EN") "Pick your location" else "Saan ka manggagaling?",
+                        lang            = lang,
+                        modifier        = Modifier.fillMaxWidth(),
                     )
                 }
             }
@@ -143,10 +166,10 @@ private fun SearchInputCard(
                     PlacesSearchBar(
                         value           = destination,
                         onValueChange   = onDestinationChange,
-                        onPlaceSelected = { _, displayName ->
-                            onDestinationChange(displayName)
-                        },
+                        onResultSelected = onDestSelected,
+                        localResults    = destResults,
                         focusRequester  = focusRequester,
+                        placeholder     = if (lang == "EN") "Where are you going?" else "Saan ka pupunta?",
                         lang            = lang,
                         modifier        = Modifier.fillMaxWidth(),
                     )

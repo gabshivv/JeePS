@@ -4,6 +4,7 @@ import com.google.android.gms.maps.model.LatLng
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -14,25 +15,8 @@ object LatLngSerializer : KSerializer<LatLng> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LatLng", PrimitiveKind.STRING)
     override fun serialize(encoder: Encoder, value: LatLng) = encoder.encodeString("${value.latitude},${value.longitude}")
     override fun deserialize(decoder: Decoder): LatLng {
-        val parts = decoder.decodeString().split(",")
-        if (parts.size < 2) return LatLng(0.0, 0.0)
-        return LatLng(parts[0].toDouble(), parts[1].toDouble())
-    }
-}
-
-object LatLngListSerializer : KSerializer<List<LatLng>> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LatLngList", PrimitiveKind.STRING)
-    override fun serialize(encoder: Encoder, value: List<LatLng>) {
-        val str = value.joinToString(";") { "${it.latitude},${it.longitude}" }
-        encoder.encodeString(str)
-    }
-    override fun deserialize(decoder: Decoder): List<LatLng> {
-        val str = decoder.decodeString()
-        if (str.isEmpty()) return emptyList()
-        return str.split(";").mapNotNull {
-            val parts = it.split(",")
-            if (parts.size >= 2) LatLng(parts[0].toDouble(), parts[1].toDouble()) else null
-        }
+        val (lat, lng) = decoder.decodeString().split(",").map { it.toDouble() }
+        return LatLng(lat, lng)
     }
 }
 
@@ -54,13 +38,29 @@ data class Route(
     val landmarks: List<Landmark> = emptyList(),
     val waymarks: List<Waymark> = emptyList(),
     @Serializable(with = LatLngListSerializer::class)
-    @SerialName("path_geometry") val path: List<LatLng> = emptyList()
+    val path: List<LatLng> = emptyList()
 ) {
     val originName: String
         get() = terminalAssignments.find { it.type == "start" }?.terminal?.name ?: "Unknown Origin"
 
     val destinationName: String
         get() = terminalAssignments.find { it.type == "end" }?.terminal?.name ?: "Unknown Destination"
+}
+
+object LatLngListSerializer : KSerializer<List<LatLng>> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LatLngList", PrimitiveKind.STRING)
+    override fun serialize(encoder: Encoder, value: List<LatLng>) {
+        val str = value.joinToString(";") { "${it.latitude},${it.longitude}" }
+        encoder.encodeString(str)
+    }
+    override fun deserialize(decoder: Decoder): List<LatLng> {
+        val str = decoder.decodeString()
+        if (str.isEmpty()) return emptyList()
+        return str.split(";").map {
+            val (lat, lng) = it.split(",").map { s -> s.toDouble() }
+            LatLng(lat, lng)
+        }
+    }
 }
 
 @Serializable

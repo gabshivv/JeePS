@@ -15,7 +15,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.jeeps.data.model.RouteType
 import com.example.jeeps.ui.theme.*
 
 enum class SignboardSize { MINI, FULL }
@@ -26,7 +25,7 @@ fun SignboardCard(
     origin: String,
     destination: String,
     viaText: String,
-    routeType: RouteType,
+    routeType: String,
     size: SignboardSize = SignboardSize.FULL,
     modifier: Modifier = Modifier,
 ) {
